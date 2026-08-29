@@ -39,7 +39,11 @@ function safePersonName(name, role) {
   if (!n) return '';
   if (/^stjerne\b/i.test(n) || /stjerne/i.test(r)) return '';
   if (/^mangler person/i.test(n)) return n;
-  if (/spíri/i.test(r)) return firstName(n);
+
+  // Kun de faktiske Spírar skal anonymiseres til fornavn.
+  // Roller som "Spíri mentor / Framleiðsluhjálp" er personale og skal beholde fuldt navn.
+  if (r.toLocaleLowerCase('fo-FO') === 'spíri') return firstName(n);
+
   return n;
 }
 
