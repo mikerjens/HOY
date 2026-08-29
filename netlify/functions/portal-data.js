@@ -6,6 +6,7 @@ const WEEK_RANGE = 'A8:R12';
 const WEEK_FROM = '2026-08-30';
 const WEEK_TO = '2026-09-13';
 const WEEK_LOCATION = 'Gentukostdeildin, Hoydalar';
+const MARIA_SYNC_LOCATION = 'Loftet, Studentaskúlin í Hoydølum';
 
 function parseCsv(text) {
   const rows = [];
@@ -189,13 +190,13 @@ function parseWeekPlan(rows) {
         pushShift(shifts, {
           id: `LIVEW${seq++}`, date, start: b.start, end: b.end,
           person: name, role: 'Spíri', task: 'Sync med Maria. Maria har 1. prioritet.',
-          location: WEEK_LOCATION, activity: 'Sync · Maria', status: 'Planlagt'
+          location: MARIA_SYNC_LOCATION, activity: 'Sync · Maria', status: 'Planlagt'
         });
         pushShift(shifts, {
           id: `LIVEW${seq++}`, date, start: b.start, end: b.end,
           person: 'Maria Winther Olsen', role: 'Tilrettelæggelse, scenografi og talentkontakt',
           task: `Sync med ${name}. Maria har 1. prioritet.`,
-          location: WEEK_LOCATION, activity: 'Sync', status: 'Planlagt'
+          location: MARIA_SYNC_LOCATION, activity: 'Sync', status: 'Planlagt'
         });
       });
     }
