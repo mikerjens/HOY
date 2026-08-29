@@ -3,258 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#fff7fb">
+<meta name="theme-color" content="#fff8fb">
 <title>HOYDALAR 2 · Produktionsportal</title>
 <style>
-:root{
-  --ink:#17233d;
-  --muted:#728096;
-  --line:#e8edf3;
-  --white:#ffffff;
-  --bg:#fff9fc;
-  --pink:#ff4f86;
-  --orange:#ff9f43;
-  --cyan:#42d7d0;
-  --blue:#3f8efc;
-  --lime:#8bd34b;
-  --purple:#a15eea;
-  --shadow:0 14px 35px rgba(30,45,80,.08);
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(160deg,#fff 0%,#fff8fb 45%,#f8fbff 100%)}
-button,select{font:inherit}
-button{cursor:pointer}
-
-/* MOBILE FIRST */
-.shell{min-height:100vh;padding-bottom:82px}
-.mobile-head{position:sticky;top:0;z-index:50;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-top));background:rgba(255,255,255,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-.home-btn{border:0;background:linear-gradient(100deg,var(--cyan),#66dcae);color:#fff;font-weight:900;border-radius:13px;padding:11px 14px;box-shadow:0 8px 20px rgba(66,215,208,.22)}
-.logo{font-weight:950;font-size:18px;text-align:center;letter-spacing:.3px;white-space:nowrap}.logo span{color:var(--pink)}
-.menu-btn{border:1px solid var(--line);background:#fff;border-radius:13px;padding:10px 12px;font-weight:900;color:var(--ink)}
-
-.mobile-menu{display:none;position:fixed;z-index:45;top:64px;left:10px;right:10px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 60px rgba(25,36,66,.16);padding:10px}.mobile-menu.open{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-menu button{border:0;background:#f7f9fc;border-radius:12px;padding:13px 10px;font-weight:850;color:var(--ink)}
-
-.content{padding:14px 12px 28px;max-width:1280px;margin:0 auto}
-.name-wrap{position:sticky;top:66px;z-index:30;margin-bottom:14px;padding:7px 0;background:linear-gradient(180deg,rgba(255,249,252,.96),rgba(255,249,252,.76),rgba(255,249,252,0))}
-.name-select{width:100%;appearance:none;border:0;border-radius:18px;padding:17px 48px 17px 18px;color:#fff;font-weight:950;font-size:16px;letter-spacing:.02em;background:linear-gradient(95deg,var(--pink),var(--orange));box-shadow:0 12px 28px rgba(255,79,134,.22);background-image:linear-gradient(45deg,transparent 50%,white 50%),linear-gradient(135deg,white 50%,transparent 50%),linear-gradient(95deg,var(--pink),var(--orange));background-position:calc(100% - 23px) 50%,calc(100% - 17px) 50%,0 0;background-size:6px 6px,6px 6px,100% 100%;background-repeat:no-repeat}
-
-.page{display:none}.page.active{display:block}
-.page-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px 14px}.page-title h1{font-size:26px;margin:0;font-weight:950}.tag{font-size:11px;font-weight:900;color:#7b6a74;background:#fff;border:1px solid var(--line);padding:7px 9px;border-radius:999px}
-
-.notice{border-radius:20px;padding:16px 18px;margin-bottom:14px;background:linear-gradient(110deg,#fff 0%,#fff 48%,rgba(255,79,134,.10) 70%,rgba(66,215,208,.16) 100%);border:1px solid var(--line);box-shadow:var(--shadow);font-weight:900;color:#83546a}
-
-.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
-.card-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line)}
-.card-head h2{font-size:15px;margin:0;font-weight:950}
-.accent{width:8px;height:22px;border-radius:999px;background:linear-gradient(var(--pink),var(--orange))}
-.card-title{display:flex;align-items:center;gap:10px}
-
-.schedule{padding:0 13px}.row{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
-.date{border-radius:14px;text-align:center;padding:8px 4px;font-weight:950;line-height:1.0}.date small,.date em{display:block;font-size:10px;font-style:normal}.date strong{display:block;font-size:21px;margin:4px 0}.d1{background:#ffe7ef;color:#d9366c}.d2{background:#fff0df;color:#d97906}.d3{background:#e8f9f7;color:#0a8990}.d4{background:#f1e7fb;color:#7838bd}
-.row-title{font-weight:900;font-size:14px;margin-bottom:4px}.row-meta{color:var(--muted);font-size:12px}.time{grid-column:2;margin-top:4px;display:inline-flex;width:max-content;padding:7px 9px;border-radius:10px;background:#f6f8fb;font-size:12px;font-weight:900}
-
-.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.quick button{border:1px solid var(--line);background:#fff;border-radius:17px;padding:15px 14px;text-align:left;font-weight:950;color:var(--ink);box-shadow:0 8px 22px rgba(30,45,80,.05)}.quick small{display:block;color:var(--muted);font-weight:700;margin-top:5px}.quick .q1{border-top:4px solid var(--pink)}.quick .q2{border-top:4px solid var(--cyan)}.quick .q3{border-top:4px solid var(--orange)}.quick .q4{border-top:4px solid var(--purple)}
-
-.mobile-events{display:grid;gap:8px;padding:12px}.event-strip{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff}.event-strip strong{font-size:13px}.event-strip span{font-size:12px;color:var(--muted)}.event-badge{font-size:10px;font-weight:950;padding:6px 8px;border-radius:999px}.pr{background:#edf9e7;color:#417c1d}.op{background:#e8f2ff;color:#2567b8}.nd{background:#f2e8fc;color:#7c35bc}
-
-.calendar-desktop{display:none}.calendar-mobile{padding:12px}.cal-day{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.cal-day:last-child{border-bottom:0}.cal-num{font-weight:950}.cal-info{font-size:13px;font-weight:850}.cal-info small{display:block;color:var(--muted);font-weight:700;margin-top:3px}
-
-.simple{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:16px}.simple h2{margin:0 0 12px;font-size:18px}.person-schedule{display:grid;gap:9px}.person-item{display:grid;gap:5px;border:1px solid var(--line);border-radius:14px;padding:13px}.person-item strong{font-size:13px}.person-item span{font-weight:850}.person-item b{font-size:12px;color:#43506a}.empty{text-align:center;color:var(--muted);padding:28px 10px}
-
-.bottom-nav{position:fixed;z-index:60;left:8px;right:8px;bottom:8px;padding-bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 45px rgba(25,36,66,.18);padding:7px}.bottom-nav button{border:0;background:transparent;border-radius:14px;padding:9px 3px 8px;color:#6f7a8a;font-size:10px;font-weight:900}.bottom-nav button.active{background:linear-gradient(105deg,#e9fbfb,#fff0f5);color:var(--ink)}.bottom-nav .ico{display:block;font-size:18px;line-height:1;margin-bottom:5px}
-
-.desktop-sidebar{display:none}
-
-@media(min-width:760px){
-  .shell{padding-bottom:30px}
-  .mobile-head,.bottom-nav,.mobile-menu{display:none!important}
-  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-  .desktop-sidebar{display:flex;position:sticky;top:0;height:100vh;flex-direction:column;padding:24px 16px;border-right:1px solid var(--line);background:#fff}
-  .brand{font-weight:950;font-size:26px;padding:5px 10px 22px}.brand span{color:var(--pink)}
-  .desktop-nav{display:grid;gap:7px}.desktop-nav button{border:0;background:transparent;text-align:left;padding:13px 14px;border-radius:13px;font-weight:850;color:var(--ink)}.desktop-nav button.active{color:#fff;background:linear-gradient(100deg,var(--cyan),#67dcae);box-shadow:0 9px 22px rgba(66,215,208,.22)}
-  .side-note{margin-top:auto;border-radius:14px;background:#fff3f7;color:#b33767;padding:14px;font-size:12px;font-weight:900}
-  .content{padding:24px 28px 40px}
-  .name-wrap{position:static;display:flex;justify-content:flex-end;background:none;margin-bottom:16px;padding:0}.name-select{width:300px}
-  .page-title h1{font-size:32px}
-  .home-grid{display:grid;grid-template-columns:minmax(340px,.9fr) minmax(420px,1.1fr);gap:16px}.home-grid .card{margin-bottom:0}
-  .calendar-mobile{display:none}.calendar-desktop{display:block;padding:15px}.week{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;text-align:center;font-size:11px;font-weight:900;color:var(--muted);margin-bottom:7px}.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.day{min-height:78px;border:1px solid var(--line);border-radius:12px;padding:7px;background:#fff}.day .num{font-weight:900;font-size:11px}.event{margin-top:8px;padding:7px 5px;border-radius:8px;font-size:10px;font-weight:900;text-align:center}.off{opacity:.42}
-  .row{grid-template-columns:62px 1fr auto}.time{grid-column:auto;margin:0}
-  .quick{grid-template-columns:repeat(4,1fr);margin-top:16px}
-  .person-item{grid-template-columns:110px 1fr auto;align-items:center}.person-item b{text-align:right}
-}
+:root{--ink:#17233d;--muted:#728096;--line:#e8edf3;--pink:#ff4f86;--orange:#ff9f43;--cyan:#42d7d0;--purple:#a15eea;--blue:#3f8efc;--shadow:0 14px 35px rgba(30,45,80,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(160deg,#fff 0%,#fff8fb 45%,#f8fbff 100%)}button,select{font:inherit}button{cursor:pointer}.app{min-height:100vh}.desktop{display:none}.shell{padding-bottom:84px}.mobile-head{position:sticky;top:0;z-index:50;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-top));background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}.home-btn{border:0;background:linear-gradient(100deg,var(--cyan),#66dcae);color:#fff;font-weight:950;border-radius:13px;padding:11px 14px}.logo{font-weight:950;text-align:center}.logo span{color:var(--pink)}.menu-btn{border:1px solid var(--line);background:#fff;border-radius:13px;padding:10px 12px;font-weight:900}.mobile-menu{display:none;position:fixed;z-index:45;top:66px;left:10px;right:10px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 60px rgba(25,36,66,.16);padding:10px}.mobile-menu.open{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-menu button{border:0;background:#f7f9fc;border-radius:12px;padding:13px 10px;font-weight:850}.content{padding:14px 12px 30px;max-width:1280px;margin:0 auto}.name-wrap{position:sticky;top:66px;z-index:30;padding:7px 0 10px;background:linear-gradient(180deg,rgba(255,249,252,.98),rgba(255,249,252,.76),rgba(255,249,252,0))}.name-select{width:100%;border:0;border-radius:18px;padding:17px 18px;color:#fff;font-weight:950;font-size:16px;background:linear-gradient(95deg,var(--pink),var(--orange));box-shadow:0 12px 28px rgba(255,79,134,.22)}.page{display:none}.page.active{display:block}.page-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px 14px}.page-title h1{font-size:26px;margin:0;font-weight:950}.tag{font-size:11px;font-weight:900;color:#7b6a74;background:#fff;border:1px solid var(--line);padding:7px 9px;border-radius:999px}.notice{border-radius:20px;padding:16px 18px;margin-bottom:14px;background:linear-gradient(110deg,#fff 0%,#fff 48%,rgba(255,79,134,.10) 70%,rgba(66,215,208,.16) 100%);border:1px solid var(--line);box-shadow:var(--shadow);font-weight:900;color:#83546a}.card,.simple{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}.simple{padding:16px}.card-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line)}.card-head h2,.simple h2{font-size:16px;margin:0;font-weight:950}.accent{width:8px;height:22px;border-radius:999px;background:linear-gradient(var(--pink),var(--orange))}.card-title{display:flex;align-items:center;gap:10px}.schedule,.person-schedule{padding:0 13px}.row,.person-item{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.person-item{grid-template-columns:1fr;padding:13px}.row:last-child,.person-item:last-child{border-bottom:0}.date{border-radius:14px;text-align:center;padding:8px 4px;font-weight:950;line-height:1}.date small,.date em{display:block;font-size:10px;font-style:normal}.date strong{display:block;font-size:21px;margin:4px 0}.d1{background:#ffe7ef;color:#d9366c}.d2{background:#fff0df;color:#d97906}.d3{background:#e8f9f7;color:#0a8990}.d4{background:#f1e7fb;color:#7838bd}.row-title{font-weight:900;font-size:14px;margin-bottom:4px}.row-meta{color:var(--muted);font-size:12px}.time{display:inline-flex;width:max-content;margin-top:5px;padding:7px 9px;border-radius:10px;background:#f6f8fb;font-size:12px;font-weight:900}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.quick button{border:1px solid var(--line);background:#fff;border-radius:17px;padding:15px 14px;text-align:left;font-weight:950;color:var(--ink)}.quick small{display:block;color:var(--muted);font-weight:700;margin-top:5px}.q1{border-top:4px solid var(--pink)!important}.q2{border-top:4px solid var(--cyan)!important}.q3{border-top:4px solid var(--orange)!important}.q4{border-top:4px solid var(--purple)!important}.empty{text-align:center;color:var(--muted);padding:28px 10px}.status{font-size:11px;font-weight:900;padding:5px 8px;border-radius:999px;background:#eef6ff;color:#3268a8;display:inline-block}.bottom-nav{position:fixed;z-index:60;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 45px rgba(25,36,66,.18);padding:7px calc(7px + env(safe-area-inset-bottom))}.bottom-nav button{border:0;background:transparent;border-radius:14px;padding:9px 3px 8px;color:#6f7a8a;font-size:10px;font-weight:900}.bottom-nav button.active{background:linear-gradient(105deg,#e9fbfb,#fff0f5);color:var(--ink)}.bottom-nav .ico{display:block;font-size:18px;margin-bottom:5px}.loading{opacity:.65}
+@media(min-width:760px){.app{display:grid;grid-template-columns:240px 1fr}.desktop{display:flex;position:sticky;top:0;height:100vh;flex-direction:column;padding:24px 16px;border-right:1px solid var(--line);background:#fff}.brand{font-weight:950;font-size:26px;padding:5px 10px 22px}.brand span{color:var(--pink)}.desktop-nav{display:grid;gap:7px}.desktop-nav button{border:0;background:transparent;text-align:left;padding:13px 14px;border-radius:13px;font-weight:850}.desktop-nav button.active{color:#fff;background:linear-gradient(100deg,var(--cyan),#67dcae)}.side-note{margin-top:auto;border-radius:14px;background:#fff3f7;color:#b33767;padding:14px;font-size:12px;font-weight:900}.mobile-head,.mobile-menu,.bottom-nav{display:none!important}.shell{padding-bottom:30px}.content{padding:24px 28px 40px}.name-wrap{position:static;display:flex;justify-content:flex-end;background:none}.name-select{width:320px}.page-title h1{font-size:32px}.home-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:16px}.quick{grid-template-columns:repeat(4,1fr)}.row{grid-template-columns:62px 1fr auto}.row .time{margin:0}.person-item{grid-template-columns:120px 1fr auto}.person-item b{text-align:right}}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="desktop-sidebar">
-    <div class="brand">HOYDALAR <span>2</span></div>
-    <nav class="desktop-nav">
-      <button class="active" data-page="home">HJEM</button>
-      <button data-page="mine">MIT SKEMA</button>
-      <button data-page="all">SKEMA ALLE</button>
-      <button data-page="calendar">KALENDER</button>
-      <button data-page="people">PERSONER</button>
-      <button data-page="docs">DOKUMENTER</button>
-      <button data-page="messages">BESKEDER</button>
-      <button data-page="contact">KONTAKT</button>
-    </nav>
-    <div class="side-note">Vaktarskipan kemur í næstu viku</div>
-  </aside>
-
-  <div class="shell">
-    <header class="mobile-head">
-      <button class="home-btn" data-page="home">HJEM</button>
-      <div class="logo">HOYDALAR <span>2</span></div>
-      <button class="menu-btn" id="menuBtn">MENU</button>
-    </header>
-
-    <div class="mobile-menu" id="mobileMenu">
-      <button data-page="mine">MIT SKEMA</button>
-      <button data-page="all">SKEMA ALLE</button>
-      <button data-page="calendar">KALENDER</button>
-      <button data-page="people">PERSONER</button>
-      <button data-page="docs">DOKUMENTER</button>
-      <button data-page="messages">BESKEDER</button>
-      <button data-page="contact">KONTAKT</button>
-    </div>
-
-    <main class="content">
-      <div class="name-wrap">
-        <select class="name-select" id="nameSelect">
-          <option value="">VÆLG DIT NAVN</option>
-          <option>Michael Koba</option>
-          <option>Maria Winther Olsen</option>
-          <option>Jónfinn Stenberg</option>
-          <option>Elin Dagbjartsdóttir Neshamar</option>
-          <option>Alvin Ellebye</option>
-          <option>Heini Holm Johannesen</option>
-          <option>Rúni Friis Kjær</option>
-          <option>Jonna Fritsdóttir Mortensen</option>
-        </select>
-      </div>
-
-      <section class="page active" id="home">
-        <div class="page-title"><h1>HJEM</h1><span class="tag">SEPTEMBER 2026</span></div>
-        <div class="notice">Vaktarskipan kemur í næstu viku</div>
-
-        <div class="quick">
-          <button class="q1" data-page="mine">MIT SKEMA<small>Mine tider</small></button>
-          <button class="q2" data-page="all">SKEMA ALLE<small>Hele produktionen</small></button>
-          <button class="q3" data-page="calendar">KALENDER<small>Datoer</small></button>
-          <button class="q4" data-page="people">PERSONER<small>Kontakt</small></button>
-        </div>
-
-        <div class="home-grid">
-          <section class="card">
-            <div class="card-head"><div class="card-title"><span class="accent"></span><h2>KOMMENDE DAGE</h2></div></div>
-            <div class="schedule">
-              <div class="row"><div class="date d1"><small>SØN</small><strong>27</strong><em>SEP</em></div><div><div class="row-title">Del 5 · Orkesterprøve</div><div class="row-meta">Hoydalar</div><div class="time">08:00 · 16:00</div></div></div>
-              <div class="row"><div class="date d2"><small>MAN</small><strong>28</strong><em>SEP</em></div><div><div class="row-title">Del 5 · Optagedag</div><div class="row-meta">Hoydalar</div><div class="time">15:00 · 22:30</div></div></div>
-              <div class="row"><div class="date d3"><small>TIR</small><strong>29</strong><em>SEP</em></div><div><div class="row-title">Nedtagning</div><div class="row-meta">Teknikhold</div><div class="time">09:00 · 17:00</div></div></div>
-              <div class="row"><div class="date d4"><small>ONS</small><strong>30</strong><em>SEP</em></div><div><div class="row-title">Nedtagning</div><div class="row-meta">Teknikhold</div><div class="time">09:00 · 17:00</div></div></div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head"><div class="card-title"><span class="accent" style="background:linear-gradient(var(--orange),var(--pink))"></span><h2>OVERBLIK</h2></div></div>
-            <div class="calendar-mobile">
-              <div class="cal-day"><div class="cal-num">16 SEP</div><div class="cal-info">Del 1 · Prøve<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">17 SEP</div><div class="cal-info">Del 1 · Optagelse<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">18 SEP</div><div class="cal-info">Del 2 · Prøve<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">19 SEP</div><div class="cal-info">Del 2 · Optagelse<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">21 SEP</div><div class="cal-info">Del 3 · Prøve<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">22 SEP</div><div class="cal-info">Del 3 · Optagelse<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">23 SEP</div><div class="cal-info">Del 4 · Prøve<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">24 SEP</div><div class="cal-info">Del 4 · Optagelse<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">27 SEP</div><div class="cal-info">Del 5 · Prøve<small>Hoydalar</small></div></div>
-              <div class="cal-day"><div class="cal-num">28 SEP</div><div class="cal-info">Del 5 · Optagelse<small>Hoydalar</small></div></div>
-            </div>
-            <div class="calendar-desktop">
-              <div class="week"><span>MAN</span><span>TIR</span><span>ONS</span><span>TOR</span><span>FRE</span><span>LØR</span><span>SØN</span></div>
-              <div class="cal">
-                <div class="day"><span class="num">14</span></div><div class="day"><span class="num">15</span></div><div class="day"><span class="num">16</span><div class="event pr">Del 1 · Prøve</div></div><div class="day"><span class="num">17</span><div class="event op">Del 1 · Optagelse</div></div><div class="day"><span class="num">18</span><div class="event pr">Del 2 · Prøve</div></div><div class="day"><span class="num">19</span><div class="event op">Del 2 · Optagelse</div></div><div class="day"><span class="num">20</span></div>
-                <div class="day"><span class="num">21</span><div class="event pr">Del 3 · Prøve</div></div><div class="day"><span class="num">22</span><div class="event op">Del 3 · Optagelse</div></div><div class="day"><span class="num">23</span><div class="event pr">Del 4 · Prøve</div></div><div class="day"><span class="num">24</span><div class="event op">Del 4 · Optagelse</div></div><div class="day"><span class="num">25</span></div><div class="day"><span class="num">26</span></div><div class="day"><span class="num">27</span><div class="event pr">Del 5 · Prøve</div></div>
-                <div class="day"><span class="num">28</span><div class="event op">Del 5 · Optagelse</div></div><div class="day"><span class="num">29</span><div class="event nd">Nedtagning</div></div><div class="day"><span class="num">30</span><div class="event nd">Nedtagning</div></div><div class="day off"><span class="num">1</span></div><div class="day off"><span class="num">2</span></div><div class="day off"><span class="num">3</span></div><div class="day off"><span class="num">4</span></div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </section>
-
-      <section class="page" id="mine">
-        <div class="page-title"><h1>MIT SKEMA</h1></div>
-        <div class="simple"><div id="mineContent" class="empty">Vælg dit navn øverst.</div></div>
-      </section>
-
-      <section class="page" id="all">
-        <div class="page-title"><h1>SKEMA ALLE</h1></div>
-        <div class="simple"><div class="person-schedule">
-          <div class="person-item"><strong>16. sep</strong><span>Del 1 · Prøve</span><b>08:15 · 16:15</b></div>
-          <div class="person-item"><strong>17. sep</strong><span>Del 1 · Optagelse</span><b>15:00 · 22:30</b></div>
-          <div class="person-item"><strong>18. sep</strong><span>Del 2 · Prøve</span><b>08:15 · 16:15</b></div>
-          <div class="person-item"><strong>19. sep</strong><span>Del 2 · Optagelse</span><b>15:00 · 22:30</b></div>
-          <div class="person-item"><strong>21. sep</strong><span>Del 3 · Prøve</span><b>08:15 · 16:15</b></div>
-          <div class="person-item"><strong>22. sep</strong><span>Del 3 · Optagelse</span><b>15:00 · 22:30</b></div>
-          <div class="person-item"><strong>23. sep</strong><span>Del 4 · Prøve</span><b>08:15 · 16:15</b></div>
-          <div class="person-item"><strong>24. sep</strong><span>Del 4 · Optagelse</span><b>15:00 · 22:30</b></div>
-          <div class="person-item"><strong>27. sep</strong><span>Del 5 · Prøve</span><b>08:15 · 16:15</b></div>
-          <div class="person-item"><strong>28. sep</strong><span>Del 5 · Optagelse</span><b>15:00 · 22:30</b></div>
-        </div></div>
-      </section>
-
-      <section class="page" id="calendar"><div class="page-title"><h1>KALENDER</h1></div><div class="simple"><div class="person-schedule"><div class="person-item"><strong>16 SEP</strong><span>Del 1 · Prøve</span></div><div class="person-item"><strong>17 SEP</strong><span>Del 1 · Optagelse</span></div><div class="person-item"><strong>18 SEP</strong><span>Del 2 · Prøve</span></div><div class="person-item"><strong>19 SEP</strong><span>Del 2 · Optagelse</span></div><div class="person-item"><strong>21 SEP</strong><span>Del 3 · Prøve</span></div><div class="person-item"><strong>22 SEP</strong><span>Del 3 · Optagelse</span></div><div class="person-item"><strong>23 SEP</strong><span>Del 4 · Prøve</span></div><div class="person-item"><strong>24 SEP</strong><span>Del 4 · Optagelse</span></div><div class="person-item"><strong>27 SEP</strong><span>Del 5 · Prøve</span></div><div class="person-item"><strong>28 SEP</strong><span>Del 5 · Optagelse</span></div></div></div></section>
-      <section class="page" id="people"><div class="page-title"><h1>PERSONER</h1></div><div class="simple"><div class="empty">Personoversigt kommer her.</div></div></section>
-      <section class="page" id="docs"><div class="page-title"><h1>DOKUMENTER</h1></div><div class="simple"><div class="empty">Dokumenter kommer her.</div></div></section>
-      <section class="page" id="messages"><div class="page-title"><h1>BESKEDER</h1></div><div class="simple"><div class="empty">Beskeder kommer her.</div></div></section>
-      <section class="page" id="contact"><div class="page-title"><h1>KONTAKT</h1></div><div class="simple"><div class="empty">Kontaktoversigt kommer her.</div></div></section>
-    </main>
-
-    <nav class="bottom-nav">
-      <button class="active" data-page="home"><span class="ico">⌂</span>HJEM</button>
-      <button data-page="mine"><span class="ico">●</span>MIT SKEMA</button>
-      <button data-page="all"><span class="ico">▦</span>ALLE</button>
-      <button data-page="calendar"><span class="ico">□</span>KALENDER</button>
-    </nav>
-  </div>
-</div>
+<aside class="desktop"><div class="brand">HOYDALAR <span>2</span></div><nav class="desktop-nav"><button class="active" data-page="home">HJEM</button><button data-page="mine">MIT SKEMA</button><button data-page="all">SKEMA ALLE</button><button data-page="calendar">KALENDER</button><button data-page="people">PERSONER</button><button data-page="docs">DOKUMENTER</button><button data-page="messages">BESKEDER</button><button data-page="contact">KONTAKT</button></nav><div class="side-note">Vaktarskipan kemur í næstu viku</div></aside>
+<div class="shell">
+<header class="mobile-head"><button class="home-btn" data-page="home">HJEM</button><div class="logo">HOYDALAR <span>2</span></div><button class="menu-btn" id="menuBtn">MENU</button></header>
+<div class="mobile-menu" id="mobileMenu"><button data-page="mine">MIT SKEMA</button><button data-page="all">SKEMA ALLE</button><button data-page="calendar">KALENDER</button><button data-page="people">PERSONER</button><button data-page="docs">DOKUMENTER</button><button data-page="messages">BESKEDER</button><button data-page="contact">KONTAKT</button></div>
+<main class="content">
+<div class="name-wrap"><select class="name-select" id="nameSelect"><option value="">INDLÆSER NAVNE…</option></select></div>
+<section class="page active" id="home"><div class="page-title"><h1>HJEM</h1><span class="tag" id="syncTag">LIVE DATA</span></div><div class="notice">Vaktarskipan kemur í næstu viku</div><div class="quick"><button class="q1" data-page="mine">MIT SKEMA<small>Mine tider</small></button><button class="q2" data-page="all">SKEMA ALLE<small>Hele produktionen</small></button><button class="q3" data-page="calendar">KALENDER<small>Datoer</small></button><button class="q4" data-page="people">PERSONER<small>Navneliste</small></button></div><div class="home-grid"><section class="card"><div class="card-head"><div class="card-title"><span class="accent"></span><h2>KOMMENDE DAGE</h2></div></div><div class="schedule" id="upcoming"><div class="empty">Indlæser…</div></div></section><section class="card"><div class="card-head"><div class="card-title"><span class="accent"></span><h2>PRODUKTIONSOVERBLIK</h2></div></div><div class="schedule" id="overview"><div class="empty">Indlæser…</div></div></section></div></section>
+<section class="page" id="mine"><div class="page-title"><h1>MIT SKEMA</h1></div><div class="simple"><div id="mineContent" class="empty">Vælg dit navn øverst.</div></div></section>
+<section class="page" id="all"><div class="page-title"><h1>SKEMA ALLE</h1></div><div class="simple"><div id="allContent" class="empty">Indlæser…</div></div></section>
+<section class="page" id="calendar"><div class="page-title"><h1>KALENDER</h1></div><div class="simple"><div id="calendarContent" class="empty">Indlæser…</div></div></section>
+<section class="page" id="people"><div class="page-title"><h1>PERSONER</h1></div><div class="simple"><div id="peopleContent" class="empty">Indlæser…</div></div></section>
+<section class="page" id="docs"><div class="page-title"><h1>DOKUMENTER</h1></div><div class="simple"><div class="empty">Kommer senere</div></div></section>
+<section class="page" id="messages"><div class="page-title"><h1>BESKEDER</h1></div><div class="simple"><div class="empty">Kommer senere</div></div></section>
+<section class="page" id="contact"><div class="page-title"><h1>KONTAKT</h1></div><div class="simple"><div class="empty">Kommer senere</div></div></section>
+</main>
+<nav class="bottom-nav"><button class="active" data-page="home"><span class="ico">⌂</span>HJEM</button><button data-page="mine"><span class="ico">◷</span>MIT SKEMA</button><button data-page="all"><span class="ico">▦</span>ALLE</button><button data-page="calendar"><span class="ico">□</span>KALENDER</button></nav>
+</div></div>
 <script>
-const sampleSchedules={
-  'Michael Koba':[['16. sep','Produktion','08:00 · 16:00'],['17. sep','Optagedag','14:00 · 23:00'],['18. sep','Produktion','08:00 · 16:00'],['19. sep','Optagedag','14:00 · 23:00'],['21. sep','Produktion','08:00 · 16:00'],['22. sep','Optagedag','14:00 · 23:00'],['23. sep','Produktion','08:00 · 16:00'],['24. sep','Optagedag','14:00 · 23:00'],['27. sep','Del 5 · Prøve','08:00 · 16:00'],['28. sep','Del 5 · Optagelse','14:00 · 23:00']],
-  'Maria Winther Olsen':[['16. sep','Del 1 · Prøve','08:15 · 16:15'],['17. sep','Del 1 · Optagelse','15:00 · 22:30'],['18. sep','Del 2 · Prøve','08:15 · 16:15'],['19. sep','Del 2 · Optagelse','15:00 · 22:30'],['21. sep','Del 3 · Prøve','08:15 · 16:15'],['22. sep','Del 3 · Optagelse','15:00 · 22:30'],['23. sep','Del 4 · Prøve','08:15 · 16:15'],['24. sep','Del 4 · Optagelse','15:00 · 22:30'],['27. sep','Del 5 · Prøve','08:15 · 16:15'],['28. sep','Del 5 · Optagelse','15:00 · 22:30']],
-  'Jónfinn Stenberg':[['17. sep','Del 1 · Optagelse','15:00 · 22:30'],['19. sep','Del 2 · Optagelse','15:00 · 22:30'],['22. sep','Del 3 · Optagelse','15:00 · 22:30'],['24. sep','Del 4 · Optagelse','15:00 · 22:30'],['28. sep','Del 5 · Optagelse','15:00 · 22:30']],
-  'Elin Dagbjartsdóttir Neshamar':[['17. sep','Del 1 · Optagelse','15:00 · 22:30'],['19. sep','Del 2 · Optagelse','15:00 · 22:30'],['22. sep','Del 3 · Optagelse','15:00 · 22:30'],['24. sep','Del 4 · Optagelse','15:00 · 22:30'],['27. sep','Trailer','Efter plan'],['28. sep','Del 5 · Optagelse','15:00 · 22:30']],
-  'Alvin Ellebye':[['16. sep','Del 1 · Prøve','Efter plan'],['17. sep','Del 1 · Optagelse','Efter plan'],['18. sep','Del 2 · Prøve','Efter plan'],['19. sep','Del 2 · Optagelse','Efter plan'],['21. sep','Del 3 · Prøve','Efter plan'],['22. sep','Del 3 · Optagelse','Efter plan'],['23. sep','Del 4 · Prøve','Efter plan'],['24. sep','Del 4 · Optagelse','Efter plan']],
-  'Heini Holm Johannesen':[['16. sep','Del 1 · Prøve','Efter plan'],['17. sep','Del 1 · Optagelse','Efter plan'],['18. sep','Del 2 · Prøve','Efter plan'],['19. sep','Del 2 · Optagelse','Efter plan'],['21. sep','Del 3 · Prøve','Efter plan'],['22. sep','Del 3 · Optagelse','Efter plan'],['23. sep','Del 4 · Prøve','Efter plan'],['24. sep','Del 4 · Optagelse','Efter plan'],['27. sep','Del 5 · Prøve','Efter plan'],['28. sep','Del 5 · Optagelse','Efter plan']],
-  'Rúni Friis Kjær':[['16. sep','Del 1 · Prøve','Efter plan'],['17. sep','Del 1 · Optagelse','Efter plan'],['18. sep','Del 2 · Prøve','Efter plan'],['19. sep','Del 2 · Optagelse','Efter plan'],['21. sep','Del 3 · Prøve','Efter plan'],['22. sep','Del 3 · Optagelse','Efter plan'],['23. sep','Del 4 · Prøve','Efter plan'],['24. sep','Del 4 · Optagelse','Efter plan'],['27. sep','Del 5 · Prøve','Efter plan'],['28. sep','Del 5 · Optagelse','Efter plan']],
-  'Jonna Fritsdóttir Mortensen':[['16. sep','Del 1 · Prøve','Efter plan'],['18. sep','Del 2 · Prøve','Efter plan'],['21. sep','Del 3 · Prøve','Efter plan'],['23. sep','Del 4 · Prøve','Efter plan'],['27. sep','Del 5 · Prøve','Efter plan']]
-};
-
-const pages=[...document.querySelectorAll('.page')];
-const navButtons=[...document.querySelectorAll('[data-page]')];
-const bottomButtons=[...document.querySelectorAll('.bottom-nav [data-page]')];
-const mobileMenu=document.getElementById('mobileMenu');
-
-function showPage(id){
-  pages.forEach(p=>p.classList.toggle('active',p.id===id));
-  navButtons.forEach(b=>b.classList.toggle('active',b.dataset.page===id));
-  bottomButtons.forEach(b=>b.classList.toggle('active',b.dataset.page===id));
-  mobileMenu.classList.remove('open');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-navButtons.forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-document.getElementById('menuBtn').addEventListener('click',()=>mobileMenu.classList.toggle('open'));
-
-const nameSelect=document.getElementById('nameSelect');
-const mineContent=document.getElementById('mineContent');
-nameSelect.addEventListener('change',()=>{
-  const name=nameSelect.value;
-  if(!name){mineContent.innerHTML='Vælg dit navn øverst.';showPage('mine');return;}
-  const items=sampleSchedules[name]||[];
-  mineContent.innerHTML=`<div style="font-weight:950;font-size:19px;margin-bottom:12px">${name}</div><div class="person-schedule">${items.map(x=>`<div class="person-item"><strong>${x[0]}</strong><span>${x[1]}</span><b>${x[2]}</b></div>`).join('')}</div>`;
-  showPage('mine');
-});
+let DATA={people:[],shifts:[]};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function showPage(id){$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));$$('[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===id));$('#mobileMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});if(id==='mine')renderMine()}
+$$('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));$('#menuBtn').addEventListener('click',()=>$('#mobileMenu').classList.toggle('open'));
+function parseDate(s){const p=String(s||'').split('-').map(Number);return p.length===3?new Date(p[0],p[1]-1,p[2]):new Date(s)}
+function dateParts(s){const d=parseDate(s);return {wd:d.toLocaleDateString('da-DK',{weekday:'short'}).replace('.','').toUpperCase(),day:d.getDate(),mon:d.toLocaleDateString('da-DK',{month:'short'}).replace('.','').toUpperCase(),long:d.toLocaleDateString('da-DK',{weekday:'long',day:'numeric',month:'long'})}}
+function shiftTime(x){return x.start&&x.end?`${x.start} · ${x.end}`:x.start?x.start:'Tid afventer'}
+function shiftRow(x,i=0){const p=dateParts(x.date), cls=['d1','d2','d3','d4'][i%4];return `<div class="row"><div class="date ${cls}"><small>${esc(p.wd)}</small><strong>${p.day}</strong><em>${esc(p.mon)}</em></div><div><div class="row-title">${esc(x.activity||x.task||'Vagt')}</div><div class="row-meta">${esc(x.person||'')} ${x.location?'· '+esc(x.location):''}</div><div class="time">${esc(shiftTime(x))}</div></div></div>`}
+function renderMine(){const name=$('#nameSelect').value;if(!name){$('#mineContent').innerHTML='<div class="empty">Vælg dit navn øverst.</div>';return}const list=DATA.shifts.filter(x=>x.person===name).sort((a,b)=>parseDate(a.date)-parseDate(b.date)||(a.start||'').localeCompare(b.start||''));$('#mineContent').innerHTML=list.length?`<div class="person-schedule">${list.map(x=>`<div class="person-item"><strong>${esc(dateParts(x.date).long)}</strong><span>${esc(x.activity||x.task||'Vagt')}</span><b>${esc(shiftTime(x))}${x.location?' · '+esc(x.location):''}</b></div>`).join('')}</div>`:'<div class="empty">Ingen vagter fundet.</div>'}
+function renderAll(){const list=[...DATA.shifts].sort((a,b)=>parseDate(a.date)-parseDate(b.date)||(a.start||'').localeCompare(b.start||'')||a.person.localeCompare(b.person));$('#allContent').innerHTML=list.length?`<div class="person-schedule">${list.map(x=>`<div class="person-item"><strong>${esc(dateParts(x.date).long)}</strong><span>${esc(x.person)} · ${esc(x.activity||x.task||'Vagt')}</span><b>${esc(shiftTime(x))}${x.location?' · '+esc(x.location):''}</b></div>`).join('')}</div>`:'<div class="empty">Ingen vagter fundet.</div>'}
+function aggregate(){const m=new Map();DATA.shifts.forEach(x=>{if(!x.date)return;const k=x.date+'|'+(x.activity||x.task||'Vagt');if(!m.has(k))m.set(k,{date:x.date,activity:x.activity||x.task||'Vagt',location:x.location||'',start:x.start||'',end:x.end||'',count:0});const o=m.get(k);o.count++;if(x.start&&(!o.start||x.start<o.start))o.start=x.start;if(x.end&&(!o.end||x.end>o.end))o.end=x.end});return [...m.values()].sort((a,b)=>parseDate(a.date)-parseDate(b.date))}
+function renderHome(){const events=aggregate();const today=new Date();today.setHours(0,0,0,0);let upcoming=events.filter(x=>parseDate(x.date)>=today).slice(0,5);if(!upcoming.length)upcoming=events.slice(-5);$('#upcoming').innerHTML=upcoming.length?upcoming.map((x,i)=>shiftRow({...x,person:`${x.count} personer`},i)).join(''):'<div class="empty">Ingen kommende dage.</div>';$('#overview').innerHTML=events.slice(0,10).map((x,i)=>shiftRow({...x,person:`${x.count} personer`},i)).join('')||'<div class="empty">Ingen data.</div>'}
+function renderCalendar(){const events=aggregate();$('#calendarContent').innerHTML=events.length?`<div class="person-schedule">${events.map(x=>`<div class="person-item"><strong>${esc(dateParts(x.date).long)}</strong><span>${esc(x.activity)}</span><b>${x.start||x.end?esc(shiftTime(x)):esc(x.count+' personer')}</b></div>`).join('')}</div>`:'<div class="empty">Ingen datoer fundet.</div>'}
+function renderPeople(){const names=DATA.people;$('#peopleContent').innerHTML=names.length?`<div class="person-schedule">${names.map(n=>`<div class="person-item"><span>${esc(n)}</span></div>`).join('')}</div>`:'<div class="empty">Ingen personer fundet.</div>'}
+async function loadData(){try{const r=await fetch('/.netlify/functions/portal-data',{cache:'no-store'});const j=await r.json();if(!r.ok)throw new Error(j.error||'Kunne ikke hente data');DATA=j;const sel=$('#nameSelect');sel.innerHTML='<option value="">VÆLG DIT NAVN</option>'+j.people.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');const saved=localStorage.getItem('hoydalarName');if(saved&&j.people.includes(saved))sel.value=saved;sel.addEventListener('change',()=>{localStorage.setItem('hoydalarName',sel.value);renderMine();if(sel.value)showPage('mine')});renderHome();renderAll();renderCalendar();renderPeople();$('#syncTag').textContent='LIVE · OPDATERET';if(sel.value)renderMine()}catch(e){$('#nameSelect').innerHTML='<option value="">DATAFORBINDELSE MANGLER</option>';$('#syncTag').textContent='IKKE FORBUNDET';$('#upcoming').innerHTML=`<div class="empty">${esc(e.message)}</div>`;$('#overview').innerHTML='<div class="empty">Netlify skal have MASTER_SHEET_ID.</div>';$('#allContent').innerHTML='<div class="empty">Dataforbindelsen er ikke klar endnu.</div>';$('#calendarContent').innerHTML='<div class="empty">Dataforbindelsen er ikke klar endnu.</div>';$('#peopleContent').innerHTML='<div class="empty">Dataforbindelsen er ikke klar endnu.</div>'}}
+loadData();
 </script>
-</body>
-</html>
+</body></html>
