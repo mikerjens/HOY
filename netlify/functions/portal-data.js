@@ -51,6 +51,17 @@ function normalizeDate(value) {
   return raw;
 }
 
+function todayInFaroe() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Atlantic/Faroe',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date());
+  const get = type => parts.find(p => p.type === type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
 exports.handler = async function () {
   try {
     const sheetId = process.env.MASTER_SHEET_ID;
@@ -74,6 +85,8 @@ exports.handler = async function () {
     const first = rows[0].map(v => String(v || '').trim());
     if (first[0] === 'Vagt ID' || first.includes('Person')) dataRows = rows.slice(1);
 
+    const today = todayInFaroe();
+
     const shifts = dataRows.map(r => {
       const role = r[5] || '';
       const person = safePersonName(r[4], role);
@@ -89,9 +102,9 @@ exports.handler = async function () {
         activity: String(r[8] || '').trim(),
         status: String(r[9] || '').trim()
       };
-    }).filter(x => x.id && x.person && x.date);
+    }).filter(x => x.id && x.person && x.date && x.date >= today);
 
-    if (!shifts.length) throw new Error('VAGTPLAN blev læst, men ingen gyldige vagter blev fundet.');
+    if (!shifts.length) throw new Error('VAGTPLAN blev læst, men ingen aktuelle eller kommende vagter blev fundet.');
 
     const people = [...new Set(shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))]
       .sort((a,b) => a.localeCompare(b, 'da'));
@@ -103,7 +116,7 @@ exports.handler = async function () {
         'cache-control': 'public, max-age=30, s-maxage=30',
         'access-control-allow-origin': '*'
       },
-      body: JSON.stringify({ updatedAt: new Date().toISOString(), people, shifts })
+      body: JSON.stringify({ updatedAt: new Date().toISOString(), today, people, shifts })
     };
   } catch (err) {
     return {
