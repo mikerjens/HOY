@@ -219,6 +219,49 @@ function parseWeekPlan(rows) {
   return shifts;
 }
 
+function makeWeekProgram(liveWeekShifts) {
+  const spiri = liveWeekShifts.filter(x => x.role === 'Spíri');
+  const byDate = new Map();
+  spiri.forEach(x => {
+    if (!byDate.has(x.date)) byDate.set(x.date, []);
+    byDate.get(x.date).push(x);
+  });
+
+  const out = [];
+  let seq = 1;
+  for (const [date, rows] of byDate.entries()) {
+    const locations = [...new Set(rows.map(x => x.location).filter(Boolean))];
+    const hasKim = rows.some(x => /Spíri træning/i.test(x.activity));
+    const hasMaria = rows.some(x => /Sync · Maria/i.test(x.activity));
+    const hasGudrun = rows.some(x => /Ekstra sangtræning/i.test(x.activity));
+    const dayType = [hasKim ? 'Musiktræning' : '', hasMaria ? 'Sync' : '', hasGudrun ? 'Sangtræning' : ''].filter(Boolean).join(' + ');
+    const dayLocation = locations.length > 1 ? 'Flere locations · se program' : (locations[0] || 'Afklares');
+
+    rows.sort((a,b) => (a.start || '').localeCompare(b.start || '') || a.person.localeCompare(b.person, 'da'));
+    rows.forEach((x, i) => {
+      let what = x.activity;
+      if (/Spíri træning/i.test(x.activity)) what = 'Træning med Kim';
+      if (/Sync · Maria/i.test(x.activity)) what = 'Sync med Maria';
+      if (/Ekstra sangtræning/i.test(x.activity)) what = 'Sangtræning med Guðrun';
+      out.push({
+        id: `WP${seq++}`,
+        date,
+        dayType: i === 0 ? dayType : '',
+        part: '',
+        start: x.start || '',
+        end: x.end || '',
+        activity: `${x.person} · ${what} · ${x.location}`,
+        participants: x.person,
+        responsible: /Kim/.test(what) ? 'Kim Hansen' : /Maria/.test(what) ? 'Maria Winther Olsen' : /Guðrun/.test(what) ? 'Guðrun Sólja Jacobsen' : '',
+        location: i === 0 ? dayLocation : x.location,
+        status: x.status || 'Planlagt',
+        notes: ''
+      });
+    });
+  }
+  return out;
+}
+
 exports.handler = async function () {
   try {
     const sheetId = process.env[SHEET_ID_ENV];
@@ -270,7 +313,7 @@ exports.handler = async function () {
 
     let pRows = programRows;
     if (pRows[0] && String(pRows[0][0]).trim() === 'Dato') pRows = pRows.slice(1);
-    const program = pRows.map((r, i) => ({
+    const baseProgram = pRows.map((r, i) => ({
       id: `P${i + 1}`,
       date: normalizeDate(r[0]),
       dayType: sanitizePublicText(r[1]),
@@ -284,6 +327,12 @@ exports.handler = async function () {
       status: sanitizePublicText(r[9]),
       notes: sanitizePublicText(r[10])
     })).filter(x => x.date && x.date >= today && (x.activity || x.start || x.end));
+
+    const weekProgram = makeWeekProgram(liveWeekShifts).filter(x => x.date >= today);
+    const program = [
+      ...baseProgram.filter(x => x.date < WEEK_FROM || x.date > WEEK_TO),
+      ...weekProgram
+    ].sort((a,b) => a.date.localeCompare(b.date) || (a.start || '').localeCompare(b.start || ''));
 
     const people = [...new Set(shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))]
       .sort((a,b) => a.localeCompare(b, 'da'));
