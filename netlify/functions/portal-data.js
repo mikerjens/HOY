@@ -1,5 +1,6 @@
-const SHEET_NAME = 'VAGTPLAN';
-const SHEET_RANGE = 'A5:J1040';
+const SHEET_ID_ENV = 'MASTER_SHEET_ID';
+const VAGTPLAN_RANGE = 'A5:J1040';
+const DAGSPROGRAM_RANGE = 'A5:L200';
 
 function parseCsv(text) {
   const rows = [];
@@ -42,52 +43,59 @@ function safePersonName(name, role) {
   return n;
 }
 
+function sanitizePublicText(value) {
+  return String(value || '')
+    .replace(/\bstjerne\b/gi, 'gæst')
+    .replace(/\bstjerner\b/gi, 'gæster')
+    .trim();
+}
+
 function normalizeDate(value) {
-  const raw = String(value || '').trim();
+  const raw = String(value || '').trim().toLowerCase();
   let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) return `${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
   m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
-  return raw;
+  const months = {jan:1,feb:2,mar:3,apr:4,maj:5,jun:6,jul:7,aug:8,sep:9,okt:10,nov:11,dec:12};
+  m = raw.match(/(\d{1,2})\.\s*([a-zæøå]+)\.?(?:\s+)(\d{4})/i);
+  if (m) {
+    const key = m[2].slice(0,3);
+    const month = months[key];
+    if (month) return `${m[3]}-${String(month).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
+  }
+  return String(value || '').trim();
 }
 
 function todayInFaroe() {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Atlantic/Faroe',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
+    timeZone: 'Atlantic/Faroe', year: 'numeric', month: '2-digit', day: '2-digit'
   }).formatToParts(new Date());
   const get = type => parts.find(p => p.type === type)?.value || '';
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+async function fetchSheetCsv(sheetId, sheet, range) {
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&headers=1`;
+  const res = await fetch(url, { headers: { 'user-agent': 'HOYDALAR-2-portal' } });
+  if (!res.ok) throw new Error(`${sheet} svarede ${res.status}`);
+  return parseCsv(await res.text());
+}
+
 exports.handler = async function () {
   try {
-    const sheetId = process.env.MASTER_SHEET_ID;
-    if (!sheetId) {
-      return {
-        statusCode: 500,
-        headers: {'content-type':'application/json; charset=utf-8','cache-control':'no-store'},
-        body: JSON.stringify({ error: 'MASTER_SHEET_ID mangler i Netlify.' })
-      };
-    }
+    const sheetId = process.env[SHEET_ID_ENV];
+    if (!sheetId) throw new Error('MASTER_SHEET_ID mangler i Netlify.');
 
-    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}&range=${encodeURIComponent(SHEET_RANGE)}&headers=1`;
-    const res = await fetch(url, { headers: { 'user-agent': 'HOYDALAR-2-portal' } });
-    if (!res.ok) throw new Error(`Google Sheets svarede ${res.status}`);
-
-    const csv = await res.text();
-    const rows = parseCsv(csv);
-    if (!rows.length) throw new Error('VAGTPLAN returnerede ingen data.');
-
-    let dataRows = rows;
-    const first = rows[0].map(v => String(v || '').trim());
-    if (first[0] === 'Vagt ID' || first.includes('Person')) dataRows = rows.slice(1);
+    const [shiftRows, programRows] = await Promise.all([
+      fetchSheetCsv(sheetId, 'VAGTPLAN', VAGTPLAN_RANGE),
+      fetchSheetCsv(sheetId, 'DAGSPROGRAM', DAGSPROGRAM_RANGE)
+    ]);
 
     const today = todayInFaroe();
 
-    const shifts = dataRows.map(r => {
+    let sRows = shiftRows;
+    if (sRows[0] && (String(sRows[0][0]).trim() === 'Vagt ID' || sRows[0].includes('Person'))) sRows = sRows.slice(1);
+    const shifts = sRows.map(r => {
       const role = r[5] || '';
       const person = safePersonName(r[4], role);
       return {
@@ -96,15 +104,30 @@ exports.handler = async function () {
         start: String(r[2] || '').trim(),
         end: String(r[3] || '').trim(),
         person,
-        role: String(role).trim(),
-        task: String(r[6] || '').trim(),
-        location: String(r[7] || '').trim(),
-        activity: String(r[8] || '').trim(),
-        status: String(r[9] || '').trim()
+        role: sanitizePublicText(role),
+        task: sanitizePublicText(r[6]),
+        location: sanitizePublicText(r[7]),
+        activity: sanitizePublicText(r[8]),
+        status: sanitizePublicText(r[9])
       };
     }).filter(x => x.id && x.person && x.date && x.date >= today);
 
-    if (!shifts.length) throw new Error('VAGTPLAN blev læst, men ingen aktuelle eller kommende vagter blev fundet.');
+    let pRows = programRows;
+    if (pRows[0] && String(pRows[0][0]).trim() === 'Dato') pRows = pRows.slice(1);
+    const program = pRows.map((r, i) => ({
+      id: `P${i + 1}`,
+      date: normalizeDate(r[0]),
+      dayType: sanitizePublicText(r[1]),
+      part: sanitizePublicText(r[2]),
+      start: String(r[3] || '').trim(),
+      end: String(r[4] || '').trim(),
+      activity: sanitizePublicText(r[5]),
+      participants: sanitizePublicText(r[6]),
+      responsible: sanitizePublicText(r[7]),
+      location: sanitizePublicText(r[8]),
+      status: sanitizePublicText(r[9]),
+      notes: sanitizePublicText(r[10])
+    })).filter(x => x.date && x.date >= today && (x.activity || x.start || x.end));
 
     const people = [...new Set(shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))]
       .sort((a,b) => a.localeCompare(b, 'da'));
@@ -116,7 +139,7 @@ exports.handler = async function () {
         'cache-control': 'public, max-age=30, s-maxage=30',
         'access-control-allow-origin': '*'
       },
-      body: JSON.stringify({ updatedAt: new Date().toISOString(), today, people, shifts })
+      body: JSON.stringify({ updatedAt: new Date().toISOString(), today, people, shifts, program })
     };
   } catch (err) {
     return {
