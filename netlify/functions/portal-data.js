@@ -147,7 +147,9 @@ function parseWeekPlan(rows) {
   const shifts = [];
   if (!rows.length) return shifts;
   const dateRow = rows[0] || [];
-  const kimRow = rows.find(r => String(r[0] || '').trim() === 'Kim Hansen') || [];
+  // Band-rækkens første celle kan indeholde alle fire bandnavne, ikke kun Kim Hansen.
+  // Find derfor rækken hvis Kim optræder i første celle eller BAND står i beskrivelseskolonnen.
+  const kimRow = rows.find(r => /(^|\n)Kim Hansen(\n|$)/i.test(String(r[0] || '').trim()) || /^BAND\b/i.test(String(r[1] || '').trim())) || [];
   const mariaRow = rows.find(r => /^Maria\s*·\s*PLAN/i.test(String(r[0] || '').trim())) || [];
   const gudrunRow = rows.find(r => /^Guðrun Sólja Jacobsen/i.test(String(r[0] || '').trim())) || [];
   let seq = 1;
@@ -225,8 +227,6 @@ exports.handler = async function () {
     let sRows = [...shiftRows, ...shiftExtraRows];
     if (sRows[0] && (String(sRows[0][0]).trim() === 'Vagt ID' || sRows[0].includes('Person'))) sRows = sRows.slice(1);
 
-    // gviz kan springe data over efter store tomme blokke. Den ekstra range sikrer de sene rækker.
-    // Dedupe på Vagt ID, så de ikke vises dobbelt hvis hovedrange også leverer dem.
     const byId = new Map();
     sRows.forEach(r => {
       const id = String(r[0] || '').trim();
