@@ -58,6 +58,18 @@ function sanitizePublicText(value) {
 
 function normalizeDate(value, preferDayFirst = false) {
   const raw = String(value || '').trim().toLowerCase();
+
+  // Google Sheets kan returnere datoceller som serienumre (fx 46281).
+  // De skal omregnes til en rigtig kalenderdato, ellers forsvinder vagterne fra portalen.
+  if (/^\d{5}(?:\.\d+)?$/.test(raw)) {
+    const serial = Number(raw);
+    if (Number.isFinite(serial) && serial > 20000 && serial < 80000) {
+      const ms = Date.UTC(1899, 11, 30) + Math.floor(serial) * 86400000;
+      const d = new Date(ms);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+    }
+  }
+
   let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) {
     const a = Number(m[1]);
