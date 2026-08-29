@@ -1,4 +1,5 @@
 const SHEET_NAME = 'VAGTPLAN';
+const SHEET_RANGE = 'A5:J1040';
 
 function parseCsv(text) {
   const rows = [];
@@ -14,13 +15,16 @@ function parseCsv(text) {
     if ((c === '\n' || c === '\r') && !quoted) {
       if (c === '\r' && n === '\n') i++;
       row.push(value); value = '';
-      if (row.some(v => v !== '')) rows.push(row);
+      if (row.some(v => String(v).trim() !== '')) rows.push(row);
       row = [];
       continue;
     }
     value += c;
   }
-  if (value || row.length) { row.push(value); if (row.some(v => v !== '')) rows.push(row); }
+  if (value || row.length) {
+    row.push(value);
+    if (row.some(v => String(v).trim() !== '')) rows.push(row);
+  }
   return rows;
 }
 
@@ -40,43 +44,54 @@ function safePersonName(name, role) {
 
 function normalizeDate(value) {
   const raw = String(value || '').trim();
-  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return raw;
-  return `${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return raw;
 }
 
 exports.handler = async function () {
   try {
     const sheetId = process.env.MASTER_SHEET_ID;
     if (!sheetId) {
-      return { statusCode: 500, headers: {'content-type':'application/json'}, body: JSON.stringify({ error: 'MASTER_SHEET_ID mangler i Netlify.' }) };
+      return {
+        statusCode: 500,
+        headers: {'content-type':'application/json; charset=utf-8','cache-control':'no-store'},
+        body: JSON.stringify({ error: 'MASTER_SHEET_ID mangler i Netlify.' })
+      };
     }
 
-    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}&range=${encodeURIComponent(SHEET_RANGE)}&headers=1`;
     const res = await fetch(url, { headers: { 'user-agent': 'HOYDALAR-2-portal' } });
     if (!res.ok) throw new Error(`Google Sheets svarede ${res.status}`);
+
     const csv = await res.text();
     const rows = parseCsv(csv);
+    if (!rows.length) throw new Error('VAGTPLAN returnerede ingen data.');
 
-    const headerIndex = rows.findIndex(r => String(r[0] || '').trim() === 'Vagt ID');
-    if (headerIndex < 0) throw new Error('Kunne ikke finde VAGTPLAN header.');
+    let dataRows = rows;
+    const first = rows[0].map(v => String(v || '').trim());
+    if (first[0] === 'Vagt ID' || first.includes('Person')) dataRows = rows.slice(1);
 
-    const shifts = rows.slice(headerIndex + 1).map(r => {
+    const shifts = dataRows.map(r => {
       const role = r[5] || '';
       const person = safePersonName(r[4], role);
       return {
-        id: r[0] || '',
+        id: String(r[0] || '').trim(),
         date: normalizeDate(r[1]),
-        start: r[2] || '',
-        end: r[3] || '',
+        start: String(r[2] || '').trim(),
+        end: String(r[3] || '').trim(),
         person,
-        role,
-        task: r[6] || '',
-        location: r[7] || '',
-        activity: r[8] || '',
-        status: r[9] || ''
+        role: String(role).trim(),
+        task: String(r[6] || '').trim(),
+        location: String(r[7] || '').trim(),
+        activity: String(r[8] || '').trim(),
+        status: String(r[9] || '').trim()
       };
-    }).filter(x => x.id && x.person);
+    }).filter(x => x.id && x.person && x.date);
+
+    if (!shifts.length) throw new Error('VAGTPLAN blev læst, men ingen gyldige vagter blev fundet.');
 
     const people = [...new Set(shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))]
       .sort((a,b) => a.localeCompare(b, 'da'));
