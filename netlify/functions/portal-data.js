@@ -5,6 +5,7 @@ const DAGSPROGRAM_RANGE = 'A5:L200';
 const WEEK_RANGE = 'A8:R12';
 const WEEK_FROM = '2026-08-30';
 const WEEK_TO = '2026-09-13';
+const WEEK_LOCATION = 'Gentukostdeildin, Hoydalar';
 
 function parseCsv(text) {
   const rows = [];
@@ -159,7 +160,7 @@ function parseWeekPlan(rows) {
         person: 'Kim Hansen',
         role: 'Kapellmeistari',
         task: sanitizePublicText(kimText.replace(/\n+/g, ' · ')),
-        location: 'Aulan, Hoydalar',
+        location: WEEK_LOCATION,
         activity: blocks.length ? 'Musik og Spíri træning' : 'Musikøvelse',
         status: /forslag/i.test(kimText) ? 'Forslag' : 'Planlagt'
       });
@@ -174,7 +175,7 @@ function parseWeekPlan(rows) {
           person: name,
           role: 'Spíri',
           task: `Træning med Kim Hansen${/jens/i.test(b.label) ? ' og Jens' : ''}`,
-          location: 'Aulan, Hoydalar',
+          location: WEEK_LOCATION,
           activity: 'Spíri træning',
           status: /forslag/i.test(kimText) ? 'Forslag' : 'Planlagt'
         });
@@ -188,13 +189,13 @@ function parseWeekPlan(rows) {
         pushShift(shifts, {
           id: `LIVEW${seq++}`, date, start: b.start, end: b.end,
           person: name, role: 'Spíri', task: 'Sync med Maria. Maria har 1. prioritet.',
-          location: 'Afklares', activity: 'Sync · Maria', status: 'Planlagt'
+          location: WEEK_LOCATION, activity: 'Sync · Maria', status: 'Planlagt'
         });
         pushShift(shifts, {
           id: `LIVEW${seq++}`, date, start: b.start, end: b.end,
           person: 'Maria Winther Olsen', role: 'Tilrettelæggelse, scenografi og talentkontakt',
           task: `Sync med ${name}. Maria har 1. prioritet.`,
-          location: 'Afklares', activity: 'Sync', status: 'Planlagt'
+          location: WEEK_LOCATION, activity: 'Sync', status: 'Planlagt'
         });
       });
     }
@@ -204,12 +205,12 @@ function parseWeekPlan(rows) {
       const names = gudrunText.split(/\n+/).map(stripWeekName).filter(x => x && !/tider afventer/i.test(x));
       pushShift(shifts, {
         id: `LIVEW${seq++}`, date, person: 'Guðrun Sólja Jacobsen', role: 'Sangunderviser',
-        task: `Sangtræning · ${names.join(', ')} · tider afventer`, location: 'Afklares',
+        task: `Sangtræning · ${names.join(', ')} · tider afventer`, location: WEEK_LOCATION,
         activity: 'Ekstra sangtræning', status: 'Afventer'
       });
       names.forEach(name => pushShift(shifts, {
         id: `LIVEW${seq++}`, date, person: name, role: 'Spíri',
-        task: 'Ekstra sangtræning med Guðrun Sólja Jacobsen · tider afventer', location: 'Afklares',
+        task: 'Ekstra sangtræning med Guðrun Sólja Jacobsen · tider afventer', location: WEEK_LOCATION,
         activity: 'Ekstra sangtræning', status: 'Afventer'
       }));
     }
