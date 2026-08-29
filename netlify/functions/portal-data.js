@@ -39,11 +39,7 @@ function safePersonName(name, role) {
   if (!n) return '';
   if (/^stjerne\b/i.test(n) || /stjerne/i.test(r)) return '';
   if (/^mangler person/i.test(n)) return n;
-
-  // Kun de faktiske Spírar skal anonymiseres til fornavn.
-  // Roller som "Spíri mentor / Framleiðsluhjálp" er personale og skal beholde fuldt navn.
   if (r.toLocaleLowerCase('fo-FO') === 'spíri') return firstName(n);
-
   return n;
 }
 
@@ -54,10 +50,24 @@ function sanitizePublicText(value) {
     .trim();
 }
 
-function normalizeDate(value) {
+function normalizeDate(value, preferDayFirst = false) {
   const raw = String(value || '').trim().toLowerCase();
   let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    let month, day;
+    if (preferDayFirst) {
+      day = a; month = b;
+    } else if (a > 12) {
+      day = a; month = b;
+    } else if (b > 12) {
+      month = a; day = b;
+    } else {
+      month = a; day = b;
+    }
+    return `${m[3]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
   m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
   const months = {jan:1,feb:2,mar:3,apr:4,maj:5,jun:6,jul:7,aug:8,sep:9,okt:10,nov:11,dec:12};
@@ -100,11 +110,12 @@ exports.handler = async function () {
     let sRows = shiftRows;
     if (sRows[0] && (String(sRows[0][0]).trim() === 'Vagt ID' || sRows[0].includes('Person'))) sRows = sRows.slice(1);
     const shifts = sRows.map(r => {
+      const id = String(r[0] || '').trim();
       const role = r[5] || '';
       const person = safePersonName(r[4], role);
       return {
-        id: String(r[0] || '').trim(),
-        date: normalizeDate(r[1]),
+        id,
+        date: normalizeDate(r[1], /^WEEK/i.test(id)),
         start: String(r[2] || '').trim(),
         end: String(r[3] || '').trim(),
         person,
