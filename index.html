@@ -31,7 +31,7 @@
 </head>
 <body>
 <div class="app">
-<aside class="desktop"><button class="brand brand-home" data-page="home">HOYDALAR <span>2</span></button><nav class="desktop-nav"><button class="active" data-page="home">HJEM</button><button data-page="mine">MIT SKEMA</button><button data-page="all">SKEMA ALLE</button><button data-page="calendar">KALENDER</button><button data-page="people">TEAM</button><button data-page="messages">BESKEDER</button><button data-page="docs">DOKUMENTER</button><button data-page="contact">KONTAKT</button></nav></aside>
+<aside class="desktop"><button class="brand brand-home" data-page="home">HOYDALAR <span>2</span></button><nav class="desktop-nav"><button class="active" data-page="home" aria-label="Hjem" title="Hjem"><span aria-hidden="true" style="font-size:22px">⌂</span></button><button data-page="mine">MIT SKEMA</button><button data-page="all">SKEMA ALLE</button><button data-page="calendar">KALENDER</button><button data-page="people">TEAM</button><button data-page="messages">BESKEDER</button><button data-page="docs">DOKUMENTER</button><button data-page="contact">KONTAKT</button></nav></aside>
 <div class="shell">
 <header class="mobile-head"><div class="mobile-logo">HOYDALAR <span>2</span></div></header>
 <main class="content">
@@ -51,14 +51,14 @@
 <section class="page" id="docs"><div class="page-title"><h1>DOKUMENTER</h1></div><div class="simple"><div class="empty">Kommer senere</div></div></section>
 <section class="page" id="contact"><div class="page-title"><h1>KONTAKT</h1></div><div class="simple"><div class="empty">Kommer senere</div></div></section>
 </main>
-<nav class="bottom-nav"><button class="active" data-page="home"><span class="ico">⌂</span>HJEM</button><button data-page="mine"><span class="ico">▣</span>MIT SKEMA</button><button data-page="all"><span class="ico">👥</span>ALLE</button><button data-page="calendar"><span class="ico">▦</span>KALENDER</button><button id="moreBtn"><span class="ico">•••</span>MERE</button></nav>
+<nav class="bottom-nav"><button class="active" data-page="home" aria-label="Hjem" title="Hjem"><span class="ico" aria-hidden="true">⌂</span></button><button data-page="mine"><span class="ico">▣</span>MIT SKEMA</button><button data-page="all"><span class="ico">👥</span>ALLE</button><button data-page="calendar"><span class="ico">▦</span>KALENDER</button><button id="moreBtn"><span class="ico">•••</span>MERE</button></nav>
 </div></div>
 <div class="more-backdrop" id="moreBackdrop"><div class="more-sheet"><div class="more-handle"></div><h2>MERE</h2><button class="more-link" data-page="people">TEAM <span>Se hele holdet og roller</span></button><button class="more-link" data-page="messages">BESKEDER <span>Vigtig information og ændringer</span></button><button class="more-link" data-page="docs">DOKUMENTER <span>Filer og call sheets</span></button><button class="more-link" data-page="contact">KONTAKT <span>Vigtige telefonnumre</span></button></div></div>
 <script>
 const MASTER='1uD5fjFA4GW6bYtYaxCgaGB0h-FVBbp8p3ialzJpOhyY';
 let DATA={people:[],shifts:[],program:[],today:''};let MESSAGES=[];
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 function showPage(id){$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));$$('[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===id));$('#moreBackdrop').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});if(id==='mine')renderMine();if(id==='all')renderAll();if(id==='calendar')renderCalendar();if(id==='people')renderPeople();if(id==='messages')renderMessages()}
 $$('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));$('#moreBtn').addEventListener('click',()=>$('#moreBackdrop').classList.add('open'));$('#moreBackdrop').addEventListener('click',e=>{if(e.target===$('#moreBackdrop'))$('#moreBackdrop').classList.remove('open')});
 function parseDate(s){const p=String(s||'').split('-').map(Number);return p.length===3&&p.every(Boolean)?new Date(p[0],p[1]-1,p[2]):new Date(s)}
