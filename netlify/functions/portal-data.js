@@ -3,11 +3,12 @@ const WEEK_SHEET_ID = '1rNKvAFmp43bq9hNB9tlU5-2DR0sCgS9Ziv-Kc2Z0pXg';
 const VAGTPLAN_RANGE = 'A5:J1040';
 const VAGTPLAN_EXTRA_RANGE = 'A433:J500';
 const DAGSPROGRAM_RANGE = 'A5:L200';
-const WEEK_RANGE = 'A8:R12';
+const WEEK_RANGE = 'A8:R14';
 const WEEK_FROM = '2026-08-30';
 const WEEK_TO = '2026-09-13';
 const WEEK_LOCATION = 'Gentukostdeildin, Hoydalar';
 const MARIA_SYNC_LOCATION = 'Loftet, Studentaskúlin í Hoydølum';
+const GUDRUN_LOCATION = 'Lítli Skúli, 56B Hoyvíksvegur';
 
 function parseCsv(text) {
   const rows = [];
@@ -124,6 +125,12 @@ function timedBlocks(text) {
   return out;
 }
 
+function weekSpiriName(value) {
+  const s = stripWeekName(value);
+  const names = ['Naina Jórun','Vón','Helge','Tórfríð','Regin','Vár Isaksen'];
+  return names.find(n => s.toLocaleLowerCase('fo-FO').startsWith(n.toLocaleLowerCase('fo-FO'))) || '';
+}
+
 function pushShift(list, data) {
   const person = safePersonName(data.person, data.role);
   if (!person || !data.date || isWeekCategoryLabel(person)) return;
@@ -158,15 +165,29 @@ function parseWeekPlan(rows) {
       timedBlocks(mariaText).forEach(b => {
         const name = stripWeekName(b.label);
         if (isWeekCategoryLabel(name)) return;
-        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:'Sync med Maria. Maria har 1. prioritet.',location:MARIA_SYNC_LOCATION,activity:'Sync · Maria',status:'Planlagt'});
-        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:'Maria Winther Olsen',role:'Tilrettelæggelse, scenografi og talentkontakt',task:`Sync med ${name}. Maria har 1. prioritet.`,location:MARIA_SYNC_LOCATION,activity:'Sync',status:'Planlagt'});
+        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:'Sync med Maria. Maria har 1. prioritet.',location:MARIA_SYNC_LOCATION,activity:'Sync · Maria',status:/bekræftet/i.test(mariaText)?'Bekræftet':'Planlagt'});
+        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:'Maria Winther Olsen',role:'Tilrettelæggelse, scenografi og talentkontakt',task:`Sync med ${name}. Maria har 1. prioritet.`,location:MARIA_SYNC_LOCATION,activity:'Sync',status:/bekræftet/i.test(mariaText)?'Bekræftet':'Planlagt'});
       });
     }
     const gudrunText = String(gudrunRow[col] || '').trim();
     if (gudrunText) {
-      const names = gudrunText.split(/\n+/).map(stripWeekName).filter(x => x && !/tider afventer/i.test(x) && !isWeekCategoryLabel(x));
-      pushShift(shifts,{id:`LIVEW${seq++}`,date,person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:`Sangtræning · ${names.join(', ')} · tider afventer`,location:WEEK_LOCATION,activity:'Ekstra sangtræning',status:'Afventer'});
-      names.forEach(name=>pushShift(shifts,{id:`LIVEW${seq++}`,date,person:name,role:'Spíri',task:'Ekstra sangtræning med Guðrun Sólja Jacobsen · tider afventer',location:WEEK_LOCATION,activity:'Ekstra sangtræning',status:'Afventer'}));
+      const gudrunBlocks = timedBlocks(gudrunText).filter(b => !/ledig|tilgængelig/i.test(b.label));
+      if (gudrunBlocks.length) {
+        gudrunBlocks.forEach(b => {
+          const name = weekSpiriName(b.label);
+          if (!name) return;
+          const location = /lítli skúli|56b hoyvíksvegur/i.test(gudrunText) ? GUDRUN_LOCATION : WEEK_LOCATION;
+          const status = /bekræftet/i.test(gudrunText) ? 'Bekræftet' : 'Planlagt';
+          pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:'Sangtræning med Guðrun Sólja Jacobsen',location,activity:'Ekstra sangtræning',status});
+          pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:`Sangtræning med ${name}`,location,activity:'Ekstra sangtræning',status});
+        });
+      } else {
+        const names = [...new Set(gudrunText.split(/\n+/).map(weekSpiriName).filter(Boolean))];
+        if (names.length) {
+          pushShift(shifts,{id:`LIVEW${seq++}`,date,person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:`Sangtræning · ${names.join(', ')} · tider afventer`,location:WEEK_LOCATION,activity:'Ekstra sangtræning',status:'Afventer'});
+          names.forEach(name=>pushShift(shifts,{id:`LIVEW${seq++}`,date,person:name,role:'Spíri',task:'Ekstra sangtræning med Guðrun Sólja Jacobsen · tider afventer',location:WEEK_LOCATION,activity:'Ekstra sangtræning',status:'Afventer'}));
+        }
+      }
     }
   }
   return shifts;
