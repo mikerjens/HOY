@@ -1,0 +1,60 @@
+name: Audit and fix early week calendar
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-week-calendar.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix Week import and calendar summary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # Backend: respect orchestra-only blocks, special 6 Sep end time, and free day 13 Sep.
+          p=Path('netlify/functions/portal-data.js')
+          s=p.read_text()
+          old="""      const blocks = timedBlocks(kimText);
+      const starts = blocks.map(b => b.start).sort();
+      const ends = blocks.map(b => b.end).sort();
+      pushShift(shifts,{id:`LIVEW${seq++}`,date,start:starts[0]||'',end:ends.slice(-1)[0]||'',person:'Kim Hansen',role:'Kapellmeistari',task:sanitizePublicText(kimText.replace(/\\n+/g,' · ')),location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});"""
+          new="""      const blocks = timedBlocks(kimText);
+      const starts = blocks.map(b => b.start).sort();
+      const ends = blocks.map(b => b.end).sort();
+      const orchestraBlock = blocks.find(b => /^ORKESTER(?: ALENE)?$/i.test(stripWeekName(b.label)));
+      const aggregateEnd = ends.slice(-1)[0] || (/kl\\. 16:00|fra kl\\. 16:00/i.test(kimText)?'16:00':'');
+      const bandStart = orchestraBlock?.start || starts[0] || '';
+      const bandEnd = orchestraBlock && !/ALENE/i.test(orchestraBlock.label) ? orchestraBlock.end : aggregateEnd;
+      const isFreeOrchestraDay = /FRI · ORKESTRET HAR FRI/i.test(kimText);
+      if (!isFreeOrchestraDay) pushShift(shifts,{id:`LIVEW${seq++}`,date,start:bandStart,end:bandEnd,person:'Kim Hansen',role:'Kapellmeistari',task:sanitizePublicText(kimText.replace(/\\n+/g,' · ')),location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});"""
+          if old not in s: raise SystemExit('backend Kim block target not found')
+          s=s.replace(old,new,1)
+          old="""      const bandStart=starts[0]||'';
+      const bandEnd=ends.slice(-1)[0]||(/kl\\. 16:00|fra kl\\. 16:00/i.test(kimText)?'16:00':'');
+      if (!/FRI · ORKESTRET HAR FRI/i.test(kimText)) bandMembers.forEach(m=>{"""
+          new="""      if (!isFreeOrchestraDay) bandMembers.forEach(m=>{"""
+          if old not in s: raise SystemExit('backend band times target not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+
+          # Frontend calendar: only use actual music/training times for music card,
+          # and show orchestra training, sync and singing lessons separately in details.
+          p=Path('index.html')
+          s=p.read_text()
+          old="""const timed=crew.filter(x=>x.start||x.end);const starts=timed.map(x=>x.start).filter(Boolean).sort();const ends=timed.map(x=>x.end).filter(Boolean).sort();const kim=crew.find(x=>x.person==='Kim Hansen'&&/musik|træning|øvelse/i.test(String(x.activity||x.task||'')));const training=crew.filter(x=>x.role==='Spíri'&&/(spíri træning|træning med orkester)/i.test(String(x.activity||''))).sort((a,b)=>(a.start||'').localeCompare(b.start||''));const sync=crew.filter(x=>x.role==='Spíri'&&/sync/i.test(String(x.activity||''))).sort((a,b)=>(a.start||'').localeCompare(b.start||''));let label=kim?'MUSIKTRÆNING':(p[0]?.dayType||crew[0]?.activity||'Produktionsdag');if(kim&&/øvelse/i.test(String(kim.activity||kim.task||''))&&!training.length)label='MUSIKØVELSE';const detail=[];if(kim)detail.push(`Orkester ${kim.start&&kim.end?kim.start+'–'+kim.end:'hele dagen'}`);if(training.length)detail.push(training.map(x=>`${x.person} ${x.start&&x.end?x.start+'–'+x.end:''}`.trim()).join(' · '));if(sync.length)detail.push(`Sync: ${sync.map(x=>`${x.person} ${x.start&&x.end?x.start+'–'+x.end:''}`.trim()).join(' · ')}`);items=[{label,type:'pr',start:starts[0]||'',end:ends.slice(-1)[0]||'',detail:detail.join('\\n')}]"""
+          new="""const kim=crew.find(x=>x.person==='Kim Hansen'&&/musik|træning|øvelse/i.test(String(x.activity||x.task||'')));const training=crew.filter(x=>x.role==='Spíri'&&/(spíri træning|træning med orkester)/i.test(String(x.activity||''))).sort((a,b)=>(a.start||'').localeCompare(b.start||''));const sync=crew.filter(x=>x.role==='Spíri'&&/sync/i.test(String(x.activity||''))).sort((a,b)=>(a.start||'').localeCompare(b.start||''));const singing=crew.filter(x=>x.role==='Spíri'&&/sangtræning med Guðrun/i.test(String(x.activity||x.task||''))).sort((a,b)=>(a.start||'').localeCompare(b.start||''));const primary=[...(kim?[kim]:[]),...training];const starts=primary.map(x=>x.start).filter(Boolean).sort();const ends=primary.map(x=>x.end).filter(Boolean).sort();let label=kim?'MUSIKTRÆNING':(p[0]?.dayType||crew[0]?.activity||'Produktionsdag');if(kim&&/øvelse/i.test(String(kim.activity||kim.task||''))&&!training.length)label='MUSIKØVELSE';const detail=[];if(kim)detail.push(`Orkester ${kim.start&&kim.end?kim.start+'–'+kim.end:(kim.end?'slutter '+kim.end:'tid afventer')}`);if(training.length)detail.push(`Træning: ${training.map(x=>`${x.person} ${x.start&&x.end?x.start+'–'+x.end:''}`.trim()).join(' · ')}`);if(sync.length)detail.push(`Sync: ${sync.map(x=>`${x.person} ${x.start&&x.end?x.start+'–'+x.end:''}`.trim()).join(' · ')}`);if(singing.length)detail.push(`Sang: ${singing.map(x=>`${x.person} ${x.start&&x.end?x.start+'–'+x.end:''}`.trim()).join(' · ')}`);items=[{label,type:'pr',start:kim?.start||starts[0]||'',end:kim?.end||ends.slice(-1)[0]||'',detail:detail.join('\\n')}]"""
+          if old not in s: raise SystemExit('frontend early week calendar target not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          git config user.name 'HOYDALAR Portal Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html netlify/functions/portal-data.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'Audit and correct early Week calendar details'
+            git push
+          fi
