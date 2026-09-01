@@ -1,0 +1,37 @@
+name: Add Web-Stat tracking
+on:
+  push:
+    paths:
+      - '.github/workflows/add-webstat.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add Web-Stat tracker
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          snippet = '''<!-- begin Web-Stat code v 7.0 -->
+<span id="wts1559245"></span>
+<script>var wts=document.createElement('script');wts.async=true;
+wts.src='https://app.ardalio.com/wts7.js';document.head.appendChild(wts);
+wts.onload = function(){ wtsl7(1559245,4); };
+</script><noscript><img src="https://app.ardalio.com/7/4/1559245.png"></noscript>
+<!-- end Web-Stat code v 7.0 -->'''
+          for name in ['index.html','catering.html']:
+              p=Path(name)
+              s=p.read_text()
+              if 'wts1559245' not in s:
+                  s=s.replace('</body>', snippet+'\n</body>')
+                  p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "HOYDALAR Portal Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html catering.html
+          git diff --cached --quiet || git commit -m "Add Web-Stat tracking to portal"
+          git push
