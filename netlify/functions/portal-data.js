@@ -181,15 +181,18 @@ function parseWeekPlan(rows) {
       const blocks = timedBlocks(kimText);
       const starts = blocks.map(b => b.start).sort();
       const ends = blocks.map(b => b.end).sort();
-      pushShift(shifts,{id:`LIVEW${seq++}`,date,start:starts[0]||'',end:ends.slice(-1)[0]||'',person:'Kim Hansen',role:'Kapellmeistari',task:sanitizePublicText(kimText.replace(/\n+/g,' · ')),location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
+      const orchestraBlock = blocks.find(b => /^ORKESTER(?: ALENE)?$/i.test(stripWeekName(b.label)));
+      const isFreeOrchestraDay = /FRI · ORKESTRET HAR FRI/i.test(kimText);
+      const aggregateEnd = ends.slice(-1)[0] || (/kl\. 16:00|fra kl\. 16:00/i.test(kimText)?'16:00':'');
+      const bandStart = orchestraBlock?.start || starts[0] || '';
+      const bandEnd = orchestraBlock && !/ALENE/i.test(orchestraBlock.label) ? orchestraBlock.end : aggregateEnd;
+      if (!isFreeOrchestraDay) pushShift(shifts,{id:`LIVEW${seq++}`,date,start:bandStart,end:bandEnd,person:'Kim Hansen',role:'Kapellmeistari',task:sanitizePublicText(kimText.replace(/\n+/g,' · ')),location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
       blocks.forEach(b => {
         const name = stripWeekName(b.label);
         if (/jens/i.test(name) || /øvelse/i.test(name) || isWeekCategoryLabel(name)) return;
         pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:`Træning med Kim Hansen${/jens/i.test(b.label)?' og Jens':''}`,location:WEEK_LOCATION,activity:'Træning med orkester',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
       });
-      const bandStart=starts[0]||'';
-      const bandEnd=ends.slice(-1)[0]||(/kl\. 16:00|fra kl\. 16:00/i.test(kimText)?'16:00':'');
-      if (!/FRI · ORKESTRET HAR FRI/i.test(kimText)) bandMembers.forEach(m=>{
+      if (!isFreeOrchestraDay) bandMembers.forEach(m=>{
         if (m.person==='Vár Miðberg' && date>='2026-09-08' && date<='2026-09-12') return;
         pushShift(shifts,{id:`LIVEW${seq++}`,date,start:bandStart,end:bandEnd,person:m.person,role:m.role,task:'Orkesterøvelse og musiktræning',location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
       });
