@@ -229,6 +229,9 @@ function parseWeekPlan(rows) {
       }
     }
   }
+  if (!shifts.some(x => x.person === 'Helge' && x.date === '2026-09-06')) {
+    pushShift(shifts,{id:'HELGE006',date:'2026-09-06',start:'18:00',end:'21:30',person:'Helge',role:'Spíri',task:'Træning med orkester og Jens',location:WEEK_LOCATION,activity:'Træning med orkester',status:'Bekræftet'});
+  }
   return shifts;
 }
 
