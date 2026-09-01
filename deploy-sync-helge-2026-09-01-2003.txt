@@ -1,0 +1,1 @@
+Force Netlify deploy so current portal-data.js and Week-plan parsing are live. Helge 6 Sep 2026 18:00-21:30 is present in Week source and parser.
