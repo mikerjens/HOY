@@ -1,0 +1,29 @@
+name: Update catering timestamp
+on:
+  push:
+    paths:
+      - '.github/workflows/update-catering-stamp.yml'
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add date to catering update stamp
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('catering.html')
+          s=p.read_text()
+          old="$('#stamp').textContent='Opdateret '+new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'})"
+          new="const now=new Date();$('#stamp').textContent='Opdateret '+now.toLocaleDateString('da-DK',{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+now.toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'})"
+          if old not in s:
+              raise SystemExit('Target timestamp code not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+          git config user.name 'HOYDALAR Portal Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add catering.html
+          git commit -m 'Show date and time on catering update stamp'
+          git push
