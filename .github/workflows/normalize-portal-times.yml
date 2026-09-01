@@ -1,0 +1,53 @@
+name: Normalize portal times
+on:
+  push:
+    paths:
+      - '.github/workflows/normalize-portal-times.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Normalize all portal times to 24-hour format
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('netlify/functions/portal-data.js')
+          s = p.read_text()
+          marker = "function todayInFaroe() {"
+          helper = """function normalizeTime(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            let m = raw.match(/^(\\d{1,2}):(\\d{2})(?::\\d{2})?\\s*(AM|PM)$/i);
+            if (m) {
+              let h = Number(m[1]);
+              const min = m[2];
+              const ap = m[3].toUpperCase();
+              if (ap === 'AM' && h === 12) h = 0;
+              if (ap === 'PM' && h !== 12) h += 12;
+              return `${String(h).padStart(2,'0')}:${min}`;
+            }
+            m = raw.match(/^(\\d{1,2}):(\\d{2})(?::\\d{2})?$/);
+            if (m) return `${String(Number(m[1])).padStart(2,'0')}:${m[2]}`;
+            return raw;
+          }
+
+          """
+          if 'function normalizeTime(value)' not in s:
+            if marker not in s:
+              raise SystemExit('todayInFaroe marker not found')
+            s = s.replace(marker, helper + marker, 1)
+          s = s.replace("start:data.start||'',end:data.end||''", "start:normalizeTime(data.start),end:normalizeTime(data.end)")
+          s = s.replace("start:String(r[2]||'').trim(),end:String(r[3]||'').trim()", "start:normalizeTime(r[2]),end:normalizeTime(r[3])")
+          s = s.replace("start:String(r[3]||'').trim(),end:String(r[4]||'').trim()", "start:normalizeTime(r[3]),end:normalizeTime(r[4])")
+          p.write_text(s)
+          PY
+          git config user.name 'HOYDALAR Portal Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add netlify/functions/portal-data.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'Use 24-hour time format throughout portal'
+            git push
+          fi
