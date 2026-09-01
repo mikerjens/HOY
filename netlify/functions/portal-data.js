@@ -95,6 +95,23 @@ function normalizeDate(value, preferDayFirst = false) {
   return String(value || '').trim();
 }
 
+function normalizeTime(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  let m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (m) {
+    let h = Number(m[1]);
+    const min = m[2];
+    const ap = m[3].toUpperCase();
+    if (ap === 'AM' && h === 12) h = 0;
+    if (ap === 'PM' && h !== 12) h += 12;
+    return `${String(h).padStart(2,'0')}:${min}`;
+  }
+  m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (m) return `${String(Number(m[1])).padStart(2,'0')}:${m[2]}`;
+  return raw;
+}
+
 function todayInFaroe() {
   const parts = new Intl.DateTimeFormat('en-CA', {timeZone:'Atlantic/Faroe',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
   const get = type => parts.find(p => p.type === type)?.value || '';
@@ -143,7 +160,7 @@ function weekSpiriName(value) {
 function pushShift(list, data) {
   const person = safePersonName(data.person, data.role);
   if (!person || !data.date || isWeekCategoryLabel(person)) return;
-  list.push({id:data.id,date:data.date,start:data.start||'',end:data.end||'',person,role:data.role||'',task:data.task||'',location:data.location||'',activity:sanitizePublicText(data.activity||''),status:data.status||'Planlagt'});
+  list.push({id:data.id,date:data.date,start:normalizeTime(data.start),end:normalizeTime(data.end),person,role:data.role||'',task:data.task||'',location:data.location||'',activity:sanitizePublicText(data.activity||''),status:data.status||'Planlagt'});
 }
 
 function parseWeekPlan(rows) {
@@ -255,7 +272,7 @@ exports.handler = async function () {
     sRows = [...byId.values()];
     let masterShifts = sRows.map(r => {
       const id=String(r[0]||'').trim(), role=r[5]||'', person=safePersonName(r[4],role);
-      return {id,date:normalizeDate(r[1],/^WEEK/i.test(id)),start:String(r[2]||'').trim(),end:String(r[3]||'').trim(),person,role:sanitizePublicText(role),task:sanitizePublicText(r[6]),location:sanitizePublicText(r[7]),activity:sanitizePublicText(r[8]),status:sanitizePublicText(r[9])};
+      return {id,date:normalizeDate(r[1],/^WEEK/i.test(id)),start:normalizeTime(r[2]),end:normalizeTime(r[3]),person,role:sanitizePublicText(role),task:sanitizePublicText(r[6]),location:sanitizePublicText(r[7]),activity:sanitizePublicText(r[8]),status:sanitizePublicText(r[9])};
     }).filter(x=>x.id&&x.person&&x.date&&!isWeekCategoryLabel(x.person));
     const liveWeekShifts = parseWeekPlan(weekRows);
     const controlledPeople = new Set(['Kim Hansen','Maria Winther Olsen','Guðrun Sólja Jacobsen','Naina','Vón','Helge','Tórfríð','Regin','Vár','Jens L. Thomsen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Vár Miðberg']);
@@ -267,7 +284,7 @@ exports.handler = async function () {
     const shifts = [...masterShifts,...liveWeekShifts].filter(x=>x.date>=today&&!isWeekCategoryLabel(x.person)).sort((a,b)=>a.date.localeCompare(b.date)||(a.start||'').localeCompare(b.start||'')||a.person.localeCompare(b.person,'da'));
     let pRows = programRows;
     if (pRows[0] && String(pRows[0][0]).trim() === 'Dato') pRows = pRows.slice(1);
-    const baseProgram = pRows.map((r,i)=>({id:`P${i+1}`,date:normalizeDate(r[0]),dayType:sanitizePublicText(r[1]),part:sanitizePublicText(r[2]),start:String(r[3]||'').trim(),end:String(r[4]||'').trim(),activity:sanitizePublicText(r[5]),participants:sanitizePublicText(r[6]),responsible:sanitizePublicText(r[7]),location:sanitizePublicText(r[8]),status:sanitizePublicText(r[9]),notes:sanitizePublicText(r[10])})).filter(x=>x.date&&x.date>=today&&(x.activity||x.start||x.end));
+    const baseProgram = pRows.map((r,i)=>({id:`P${i+1}`,date:normalizeDate(r[0]),dayType:sanitizePublicText(r[1]),part:sanitizePublicText(r[2]),start:normalizeTime(r[3]),end:normalizeTime(r[4]),activity:sanitizePublicText(r[5]),participants:sanitizePublicText(r[6]),responsible:sanitizePublicText(r[7]),location:sanitizePublicText(r[8]),status:sanitizePublicText(r[9]),notes:sanitizePublicText(r[10])})).filter(x=>x.date&&x.date>=today&&(x.activity||x.start||x.end));
     const weekProgram = makeWeekProgram(liveWeekShifts).filter(x=>x.date>=today);
     const program = [...baseProgram.filter(x=>x.date<WEEK_FROM||x.date>WEEK_TO),...weekProgram].sort((a,b)=>a.date.localeCompare(b.date)||(a.start||'').localeCompare(b.start||''));
     const people = [...new Set(shifts.map(x=>x.person).filter(x=>x&&!/^mangler person/i.test(x)&&!isWeekCategoryLabel(x)))].sort((a,b)=>a.localeCompare(b,'da'));
