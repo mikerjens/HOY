@@ -1,0 +1,37 @@
+name: Add Web Stat
+on:
+  push:
+    paths:
+      - ".github/workflows/add-webstat2.yml"
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add tracker
+        shell: bash
+        run: |
+          TRACKER='PCEtLSBiZWdpbiBXZWItU3RhdCBjb2RlIHYgNy4wIC0tPgo8c3BhbiBpZD0id3RzMTU1OTI0NSI+PC9zcGFuPgo8c2NyaXB0PnZhciB3dHM9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnc2NyaXB0Jyk7d3RzLmFzeW5jPXRydWU7Cnd0cy5zcmM9J2h0dHBzOi8vYXBwLmFyZGFsaW8uY29tL3d0czcuanMnO2RvY3VtZW50LmhlYWQuYXBwZW5kQ2hpbGQod3RzKTsKd3RzLm9ubG9hZCA9IGZ1bmN0aW9uKCl7IHd0c2w3KDE1NTkyNDUsNCk7IH07Cjwvc2NyaXB0Pjxub3NjcmlwdD48aW1nIHNyYz0iaHR0cHM6Ly9hcHAuYXJkYWxpby5jb20vNy80LzE1NTkyNDUucG5nIj48L25vc2NyaXB0Pgo8IS0tIGVuZCBXZWItU3RhdCBjb2RlIHYgNy4wIC0tPg=='
+          export TRACKER
+          python3 - <<'PY'
+          import base64, os
+          from pathlib import Path
+          snippet=base64.b64decode(os.environ['TRACKER']).decode()
+          for name in ('index.html','catering.html'):
+              p=Path(name)
+              s=p.read_text()
+              if 'wts1559245' not in s:
+                  p.write_text(s.replace('</body>', snippet+'\n</body>'))
+          PY
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "HOYDALAR Portal Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html catering.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Add Web-Stat tracking to portal"
+            git push
+          fi
