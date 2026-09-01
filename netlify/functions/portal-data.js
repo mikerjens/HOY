@@ -153,6 +153,8 @@ function parseWeekPlan(rows) {
   const kimRow = rows.find(r => /(^|\n)Kim Hansen(\n|$)/i.test(String(r[0] || '').trim()) || /^BAND\b/i.test(String(r[1] || '').trim())) || [];
   const mariaRow = rows.find(r => /^Maria\s*·\s*PLAN/i.test(String(r[0] || '').trim())) || [];
   const gudrunRow = rows.find(r => /^Guðrun Sólja Jacobsen/i.test(String(r[0] || '').trim())) || [];
+  const jensRow = rows.find(r => /JENS L\. THOMSEN/i.test(String(r[1] || '').trim())) || [];
+  const bandMembers = [{person:'Pauli Reinert Poulsen',role:'Tónleikari'},{person:'Jóhannus á Rógvu Joensen',role:'Tónleikari'},{person:'Vár Miðberg',role:'Tónleikari'}];
   let seq = 1;
   for (let col = 2; col < dateRow.length; col++) {
     const date = normalizeDate(dateRow[col], true);
@@ -168,7 +170,15 @@ function parseWeekPlan(rows) {
         if (/jens/i.test(name) || /øvelse/i.test(name) || isWeekCategoryLabel(name)) return;
         pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:`Træning med Kim Hansen${/jens/i.test(b.label)?' og Jens':''}`,location:WEEK_LOCATION,activity:'Træning med orkester',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
       });
+      const bandStart=starts[0]||'';
+      const bandEnd=ends.slice(-1)[0]||(/kl\. 16:00|fra kl\. 16:00/i.test(kimText)?'16:00':'');
+      if (!/FRI · ORKESTRET HAR FRI/i.test(kimText)) bandMembers.forEach(m=>{
+        if (m.person==='Vár Miðberg' && date>='2026-09-08' && date<='2026-09-12') return;
+        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:bandStart,end:bandEnd,person:m.person,role:m.role,task:'Orkesterøvelse og musiktræning',location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
+      });
     }
+    const jensText=String(jensRow[col]||'').trim();
+    if (jensText) timedBlocks(jensText).forEach(b=>pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:sanitizePublicText(jensText.replace(/\n+/g,' · ')),location:WEEK_LOCATION,activity:'Træning med orkester',status:/bekræftet/i.test(jensText)?'Bekræftet':'Planlagt'}));
     const mariaText = String(mariaRow[col] || '').trim();
     if (mariaText) {
       timedBlocks(mariaText).forEach(b => {
@@ -248,7 +258,7 @@ exports.handler = async function () {
       return {id,date:normalizeDate(r[1],/^WEEK/i.test(id)),start:String(r[2]||'').trim(),end:String(r[3]||'').trim(),person,role:sanitizePublicText(role),task:sanitizePublicText(r[6]),location:sanitizePublicText(r[7]),activity:sanitizePublicText(r[8]),status:sanitizePublicText(r[9])};
     }).filter(x=>x.id&&x.person&&x.date&&!isWeekCategoryLabel(x.person));
     const liveWeekShifts = parseWeekPlan(weekRows);
-    const controlledPeople = new Set(['Kim Hansen','Maria Winther Olsen','Guðrun Sólja Jacobsen','Naina','Vón','Helge','Tórfríð','Regin','Vár']);
+    const controlledPeople = new Set(['Kim Hansen','Maria Winther Olsen','Guðrun Sólja Jacobsen','Naina','Vón','Helge','Tórfríð','Regin','Vár','Jens L. Thomsen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Vár Miðberg']);
     masterShifts = masterShifts.filter(x => {
       if (/^WEEK/i.test(x.id)) return false;
       if (x.date >= WEEK_FROM && x.date <= WEEK_TO && controlledPeople.has(x.person)) return false;
