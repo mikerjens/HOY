@@ -1,0 +1,74 @@
+name: Sync week music team
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-week-music-team.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update portal week import
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('netlify/functions/portal-data.js')
+          s=p.read_text()
+
+          old="""  const mariaRow = rows.find(r => /^Maria\\s*·\\s*PLAN/i.test(String(r[0] || '').trim())) || [];
+  const gudrunRow = rows.find(r => /^Guðrun Sólja Jacobsen/i.test(String(r[0] || '').trim())) || [];
+  let seq = 1;"""
+          new="""  const mariaRow = rows.find(r => /^Maria\\s*·\\s*PLAN/i.test(String(r[0] || '').trim())) || [];
+  const gudrunRow = rows.find(r => /^Guðrun Sólja Jacobsen/i.test(String(r[0] || '').trim())) || [];
+  const jensRow = rows.find(r => /JENS L\\. THOMSEN/i.test(String(r[1] || '').trim())) || [];
+  const bandMembers = [
+    {person:'Pauli Reinert Poulsen',role:'Tónleikari'},
+    {person:'Jóhannus á Rógvu Joensen',role:'Tónleikari'},
+    {person:'Vár Miðberg',role:'Tónleikari'}
+  ];
+  let seq = 1;"""
+          if old not in s: raise SystemExit('header target not found')
+          s=s.replace(old,new,1)
+
+          old="""      blocks.forEach(b => {
+        const name = stripWeekName(b.label);
+        if (/jens/i.test(name) || /øvelse/i.test(name) || isWeekCategoryLabel(name)) return;
+        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:`Træning med Kim Hansen${/jens/i.test(b.label)?' og Jens':''}`,location:WEEK_LOCATION,activity:'Træning med orkester',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
+      });
+    }
+    const mariaText"""
+          new="""      blocks.forEach(b => {
+        const name = stripWeekName(b.label);
+        if (/jens/i.test(name) || /øvelse/i.test(name) || isWeekCategoryLabel(name)) return;
+        pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:name,role:'Spíri',task:`Træning med Kim Hansen${/jens/i.test(b.label)?' og Jens':''}`,location:WEEK_LOCATION,activity:'Træning med orkester',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
+      });
+      const bandStart = starts[0] || '';
+      const bandEnd = ends.slice(-1)[0] || (/kl\\. 16:00|fra kl\\. 16:00/i.test(kimText)?'16:00':'');
+      if (!/FRI · ORKESTRET HAR FRI/i.test(kimText)) {
+        bandMembers.forEach(m => {
+          if (m.person==='Vár Miðberg' && date>='2026-09-08' && date<='2026-09-12') return;
+          pushShift(shifts,{id:`LIVEW${seq++}`,date,start:bandStart,end:bandEnd,person:m.person,role:m.role,task:'Orkesterøvelse og musiktræning',location:WEEK_LOCATION,activity:blocks.length?'Musiktræning med orkester':'Bandøvelse',status:/forslag/i.test(kimText)?'Forslag':'Planlagt'});
+        });
+      }
+    }
+    const jensText = String(jensRow[col] || '').trim();
+    if (jensText) {
+      timedBlocks(jensText).forEach(b => pushShift(shifts,{id:`LIVEW${seq++}`,date,start:b.start,end:b.end,person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:sanitizePublicText(jensText.replace(/\\n+/g,' · ')),location:WEEK_LOCATION,activity:'Træning med orkester',status:/bekræftet/i.test(jensText)?'Bekræftet':'Planlagt'}));
+    }
+    const mariaText"""
+          if old not in s: raise SystemExit('band target not found')
+          s=s.replace(old,new,1)
+
+          old="""    const controlledPeople = new Set(['Kim Hansen','Maria Winther Olsen','Guðrun Sólja Jacobsen','Naina','Vón','Helge','Tórfríð','Regin','Vár']);"""
+          new="""    const controlledPeople = new Set(['Kim Hansen','Maria Winther Olsen','Guðrun Sólja Jacobsen','Naina','Vón','Helge','Tórfríð','Regin','Vár','Jens L. Thomsen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Vár Miðberg']);"""
+          if old not in s: raise SystemExit('controlled target not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          git config user.name "mikerjens"
+          git config user.email "mk@fixer.fo"
+          git add netlify/functions/portal-data.js
+          git commit -m "Sync full early music team from Week plan"
+          git push
