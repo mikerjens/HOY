@@ -92,8 +92,8 @@ function todayInFaroe() {
 }
 
 async function fetchSheetCsv(sheetId, sheet, range) {
-  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&headers=0`;
-  const res = await fetch(url, {headers:{'user-agent':'HOYDALAR-2-portal'}});
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&headers=0&_=${Date.now()}`;
+  const res = await fetch(url, {cache:'no-store', headers:{'user-agent':'HOYDALAR-2-portal','cache-control':'no-cache'}});
   if (!res.ok) throw new Error(`${sheet} svarede ${res.status}`);
   return parseCsv(await res.text());
 }
