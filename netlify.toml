@@ -3,3 +3,7 @@
   to = "/.netlify/functions/portal-data-fixed"
   status = 200
   force = true
+
+[[edge_functions]]
+  path = "/"
+  function = "inject-clickfix"
