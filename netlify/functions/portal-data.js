@@ -64,6 +64,14 @@ exports.handler = async function(event, context) {
       task: 'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',
       status: 'Afventer bekræftelse'
     });
+    ensureShift({
+      ...sessionBase,
+      id: 'MAR010FILM',
+      person: 'Maria Winther Olsen',
+      role: 'Instruktør / tilrettelægger',
+      task: 'Deltager i fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Fokus på sange til én stjerne. Sessionen filmes; fotograf afventer.',
+      status: 'Bekræftet'
+    });
 
     data.shifts = shifts.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''), 'da'));
     data.people = [...new Set(data.shifts.map(x => x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
@@ -77,13 +85,18 @@ exports.handler = async function(event, context) {
         part: '',
         start: '11:00',
         end: '12:30',
-        activity: 'Guðrun Sólja med Regin, Vón og Naina Jórun · fotograf afventer',
-        participants: 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun',
+        activity: 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · fotograf afventer',
+        participants: 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen',
         responsible: 'Guðrun Sólja Jacobsen',
         location: 'Location afventer',
         status: 'Delvist bekræftet',
-        notes: 'Regin og Vón bekræftet. Naina Jórun og fotograf afventer endelig bekræftelse.'
+        notes: 'Guðrun Sólja, Regin, Vón og Maria er bekræftet. Naina Jórun og fotograf afventer endelig bekræftelse.'
       });
+    } else {
+      const p = program.find(x => x && x.id === 'WP-GUD-0910');
+      p.activity = 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · fotograf afventer';
+      p.participants = 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen';
+      p.notes = 'Guðrun Sólja, Regin, Vón og Maria er bekræftet. Naina Jórun og fotograf afventer endelig bekræftelse.';
     }
     data.program = program.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
 
