@@ -62,7 +62,7 @@ exports.handler = async function(event, context) {
       person: 'Naina',
       role: 'Spíri',
       task: 'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',
-      status: 'Afventer bekræftelse'
+      status: 'Bekræftet'
     });
     ensureShift({
       ...sessionBase,
@@ -70,6 +70,14 @@ exports.handler = async function(event, context) {
       person: 'Maria Winther Olsen',
       role: 'Instruktør / tilrettelægger',
       task: 'Deltager i fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Fokus på sange til én stjerne. Sessionen filmes; fotograf afventer.',
+      status: 'Bekræftet'
+    });
+    ensureShift({
+      ...sessionBase,
+      id: 'JON010FILM',
+      person: 'Jónfinn Stenberg',
+      role: 'Foto-koordinering',
+      task: 'Ansvarlig for at finde og aftale fotograf til optagelse af den fælles sangundervisning. Selve fotografen afventer endelig aftale.',
       status: 'Bekræftet'
     });
 
@@ -85,18 +93,20 @@ exports.handler = async function(event, context) {
         part: '',
         start: '11:00',
         end: '12:30',
-        activity: 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · fotograf afventer',
-        participants: 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen',
-        responsible: 'Guðrun Sólja Jacobsen',
+        activity: 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · Jónfinn finder fotograf',
+        participants: 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',
+        responsible: 'Guðrun Sólja Jacobsen / Jónfinn Stenberg',
         location: 'Location afventer',
-        status: 'Delvist bekræftet',
-        notes: 'Guðrun Sólja, Regin, Vón og Maria er bekræftet. Naina Jórun og fotograf afventer endelig bekræftelse.'
+        status: 'Bekræftet',
+        notes: 'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn har ansvar for at finde og aftale fotograf.'
       });
     } else {
       const p = program.find(x => x && x.id === 'WP-GUD-0910');
-      p.activity = 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · fotograf afventer';
-      p.participants = 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen';
-      p.notes = 'Guðrun Sólja, Regin, Vón og Maria er bekræftet. Naina Jórun og fotograf afventer endelig bekræftelse.';
+      p.activity = 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · Jónfinn finder fotograf';
+      p.participants = 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg';
+      p.responsible = 'Guðrun Sólja Jacobsen / Jónfinn Stenberg';
+      p.status = 'Bekræftet';
+      p.notes = 'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn har ansvar for at finde og aftale fotograf.';
     }
     data.program = program.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
 
