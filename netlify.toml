@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/.netlify/functions/portal-data"
+  to = "/.netlify/functions/portal-data-fixed"
+  status = 200
+  force = true
