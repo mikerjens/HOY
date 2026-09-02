@@ -6,7 +6,12 @@ exports.handler = async function(event, context) {
   try {
     const data = JSON.parse(res.body || '{}');
     const shifts = Array.isArray(data.shifts) ? data.shifts : [];
-    const target = {
+
+    const ensureShift = shift => {
+      if (!shifts.some(x => x && x.id === shift.id)) shifts.push(shift);
+    };
+
+    ensureShift({
       id: 'EYD024',
       date: '2026-09-24',
       start: '13:30',
@@ -17,10 +22,71 @@ exports.handler = async function(event, context) {
       location: 'Aulan, Hoydalar',
       activity: 'Optagelse, del 4 · indkøring kamera',
       status: 'Bekræftet'
+    });
+
+    const sessionBase = {
+      date: '2026-09-10',
+      start: '11:00',
+      end: '12:30',
+      location: 'Location afventer',
+      activity: 'Sangtræning + optagelse'
     };
-    if (!shifts.some(x => x && x.person === target.person && x.date === target.date)) shifts.push(target);
+
+    ensureShift({
+      ...sessionBase,
+      id: 'GUD010FILM',
+      person: 'Guðrun Sólja Jacobsen',
+      role: 'Sangunderviser',
+      task: 'Fælles sangundervisning med Regin, Vón og Naina Jórun med fokus på sange til én stjerne. Sessionen skal filmes; fotograf afventer.',
+      status: 'Bekræftet'
+    });
+    ensureShift({
+      ...sessionBase,
+      id: 'REG010FILM',
+      person: 'Regin',
+      role: 'Spíri',
+      task: 'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',
+      status: 'Bekræftet'
+    });
+    ensureShift({
+      ...sessionBase,
+      id: 'VON010FILM',
+      person: 'Vón',
+      role: 'Spíri',
+      task: 'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',
+      status: 'Bekræftet'
+    });
+    ensureShift({
+      ...sessionBase,
+      id: 'NAI010FILM',
+      person: 'Naina',
+      role: 'Spíri',
+      task: 'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',
+      status: 'Afventer bekræftelse'
+    });
+
     data.shifts = shifts.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''), 'da'));
     data.people = [...new Set(data.shifts.map(x => x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
+
+    const program = Array.isArray(data.program) ? data.program : [];
+    if (!program.some(x => x && x.id === 'WP-GUD-0910')) {
+      program.push({
+        id: 'WP-GUD-0910',
+        date: '2026-09-10',
+        dayType: 'Sangtræning + optagelse',
+        part: '',
+        start: '11:00',
+        end: '12:30',
+        activity: 'Guðrun Sólja med Regin, Vón og Naina Jórun · fotograf afventer',
+        participants: 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun',
+        responsible: 'Guðrun Sólja Jacobsen',
+        location: 'Location afventer',
+        status: 'Delvist bekræftet',
+        notes: 'Regin og Vón bekræftet. Naina Jórun og fotograf afventer endelig bekræftelse.'
+      });
+    }
+    data.program = program.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
+
     return {
       ...res,
       headers: {...(res.headers||{}), 'cache-control':'no-store, max-age=0'},
