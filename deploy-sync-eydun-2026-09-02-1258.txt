@@ -1,0 +1,1 @@
+Force Netlify deploy after confirming EYD024 (Eyðun Müller Thomsen) is present in VAGTPLAN for 2026-09-24 13:30-23:00 and should be visible in Mit skema.
