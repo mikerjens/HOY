@@ -1,0 +1,1 @@
+Force Netlify deploy after 10 September Guðrun session fix. Commit should deploy portal-data.js with Regin, Vón, Guðrun Sólja and Naina Jórun session data.
