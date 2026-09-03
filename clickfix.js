@@ -81,6 +81,30 @@
     });
   }
 
+  function decorateMessages() {
+    if (!document.getElementById('hoy-message-style')) {
+      const style = document.createElement('style');
+      style.id = 'hoy-message-style';
+      style.textContent = `
+        #homeMessages{gap:10px}
+        #homeMessages .home-message{background:linear-gradient(135deg,#fff0f5 0%,#fff8fb 58%,#fff3e8 100%);border:1px solid #efc8d7;padding:15px 44px 15px 52px;box-shadow:0 10px 26px rgba(177,18,77,.10)}
+        #homeMessages .home-message:before{content:'✉';position:absolute;left:15px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:999px;background:#b1124d;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:900}
+        #homeMessages .home-message strong{color:#7e123d}
+        #homeMessages .home-message small{color:#775565}
+        #home .messages-heading{display:flex;align-items:center;gap:8px;color:#a7154a}
+        #home .messages-heading:before{content:'✉';width:23px;height:23px;border-radius:999px;background:#b1124d;color:#fff;display:inline-grid;place-items:center;font-size:12px}
+      `;
+      document.head.appendChild(style);
+    }
+    const box = document.getElementById('homeMessages');
+    if (!box) return;
+    let heading = box.previousElementSibling;
+    if (heading?.classList?.contains('section-title')) {
+      heading.textContent = 'MESSAGES';
+      heading.classList.add('messages-heading');
+    }
+  }
+
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const row = findRow(e.target);
@@ -89,9 +113,6 @@
     openShift(row);
   }, true);
 
-  // The portal refreshes its live data every 60 seconds. The original renderAll()
-  // rebuilds the call-sheet DOM and would therefore close an event the user is reading.
-  // Preserve the currently open date whenever renderAll() is called without an explicit date.
   if (typeof window.renderAll === 'function' && !window.__hoyRenderAllPatched) {
     window.__hoyRenderAllPatched = true;
     const originalRenderAll = window.renderAll;
@@ -108,7 +129,11 @@
     };
   }
 
-  const observer = new MutationObserver(prepareRows);
+  const observer = new MutationObserver(() => {
+    prepareRows();
+    decorateMessages();
+  });
   observer.observe(document.documentElement, {subtree:true, childList:true});
   prepareRows();
+  decorateMessages();
 })();
