@@ -13,6 +13,11 @@
     return `2026-${mm}-${String(day).padStart(2,'0')}`;
   }
 
+  function getOpenDate() {
+    const open = document.querySelector('#allContent .call-card.open');
+    return open?.dataset?.call || '';
+  }
+
   function openShift(row) {
     const now = Date.now();
     if (now - lastOpen < 500) return;
@@ -83,6 +88,25 @@
     e.preventDefault();
     openShift(row);
   }, true);
+
+  // The portal refreshes its live data every 60 seconds. The original renderAll()
+  // rebuilds the call-sheet DOM and would therefore close an event the user is reading.
+  // Preserve the currently open date whenever renderAll() is called without an explicit date.
+  if (typeof window.renderAll === 'function' && !window.__hoyRenderAllPatched) {
+    window.__hoyRenderAllPatched = true;
+    const originalRenderAll = window.renderAll;
+    window.renderAll = function(openDate = '') {
+      const preservedDate = openDate || getOpenDate();
+      const result = originalRenderAll.call(this, preservedDate);
+      if (preservedDate) {
+        requestAnimationFrame(() => {
+          const card = document.querySelector(`[data-call="${preservedDate}"]`);
+          if (card) card.classList.add('open');
+        });
+      }
+      return result;
+    };
+  }
 
   const observer = new MutationObserver(prepareRows);
   observer.observe(document.documentElement, {subtree:true, childList:true});
