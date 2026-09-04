@@ -20,6 +20,11 @@ exports.handler = async function(event, context) {
       location: 'Aulan, Hoydalar', activity: 'Optagelse, del 4 · indkøring kamera', status: 'Bekræftet'
     });
 
+    // 5. september: sangtræning hos Guðrun Sólja. Vár skal altid fremgå på sin portalprofil.
+    const sep5Singing = {date:'2026-09-05',start:'12:00',end:'13:00',location:'Lítli Skúli, 56B Hoyvíksvegur',status:'Bekræftet'};
+    ensureShift({...sep5Singing,id:'VAR005G',person:'Vár',role:'Spíri',task:'Sangtræning med Guðrun Sólja Jacobsen.',activity:'Sangtræning · Guðrun Sólja'});
+    ensureShift({...sep5Singing,id:'GUD005VAR',person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:'Sangtræning med Vár.',activity:'Sangtræning · Vár'});
+
     // Vár bruger kun fornavnet i portalens personvælger. Sørg derfor for, at Week/Master-vagten 7/9 lander på samme person.
     ensureShift({
       id:'WEEK031',date:'2026-09-07',start:'12:00',end:'15:00',person:'Vár',role:'Spíri',
