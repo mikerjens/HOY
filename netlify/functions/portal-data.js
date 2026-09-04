@@ -20,13 +20,21 @@ exports.handler = async function(event, context) {
       location: 'Aulan, Hoydalar', activity: 'Optagelse, del 4 · indkøring kamera', status: 'Bekræftet'
     });
 
-    // 8. september: ekstra optagelse af Benjamin Djurhuus’ Spírar, der går ind i Aulan.
-    const sep8Base = {date:'2026-09-08',start:'13:00',end:'14:00',location:'Aulan, Hoydalar',activity:'Ekstra optagelse · indgang i Aulan'};
-    ensureShift({...sep8Base,id:'TOR008IN',person:'Tórfríð',role:'Spíri',task:'Optagelse af Benjamin Djurhuus’ Spírar, der går ind i Aulan. Sammen med Naina Jórun.',status:'Bekræftet'});
-    ensureShift({...sep8Base,id:'NAI008IN',person:'Naina Jórun',role:'Spíri',task:'Bekræftet ekstra optagelse med Tórfríð: de går ind i Aulan. Naina Jórun har bekræftet sin deltagelse.',status:'Bekræftet'});
-    ensureShift({...sep8Base,id:'KEN008IN',person:'Kenneth Jørgensen',role:'Fotograf',task:'Bekræftet fotograf på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
-    ensureShift({...sep8Base,id:'FIN008IN',person:'Finnur Koba',role:'Lagt til rættis / Klip',task:'Planlagt med på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Planlagt'});
-    ensureShift({...sep8Base,id:'BEN008IN',person:'Benjamin Djurhuus',role:'Musikproducer / rådgiver',task:'Deltager i ekstra optagelse med sine Spírar Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
+    // 8. september kl. 13-14: Benjamins Spírar. Aktuel status fra Week + Masterplan.
+    const sep8Benjamin = {date:'2026-09-08',start:'13:00',end:'14:00',location:'Aulan, Hoydalar',activity:'Ekstra optagelse · indgang i Aulan'};
+    ensureShift({...sep8Benjamin,id:'TOR008IN',person:'Tórfríð',role:'Spíri',task:'Ekstra optagelse med Naina Jórun: de går ind i Aulan.',status:'Bekræftet'});
+    ensureShift({...sep8Benjamin,id:'NAI008IN',person:'Naina Jórun',role:'Spíri',task:'Ekstra optagelse med Tórfríð: de går ind i Aulan.',status:'Bekræftet'});
+    ensureShift({...sep8Benjamin,id:'KEN008IN',person:'Kenneth Jørgensen',role:'Fotograf',task:'Fotograf på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
+    ensureShift({...sep8Benjamin,id:'FIN008IN',person:'Finnur Koba',role:'Lagt til rættis / Klip',task:'Med på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
+    ensureShift({...sep8Benjamin,id:'BEN008IN',person:'Benjamin Djurhuus',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
+
+    // 8. september kl. 14-15: Hans Poulsens Spírar. Aktuel status fra Week + Masterplan.
+    const sep8Hans = {date:'2026-09-08',start:'14:00',end:'15:00',location:'Aulan, Hoydalar',activity:'Ekstra optagelse · indgang i Aulan'};
+    ensureShift({...sep8Hans,id:'REG008IN2',person:'Regin',role:'Spíri',task:'Ekstra optagelse med Vón: de går ind i Aulan.',status:'Afventer'});
+    ensureShift({...sep8Hans,id:'VON008IN2',person:'Vón',role:'Spíri',task:'Ekstra optagelse med Regin: de går ind i Aulan.',status:'Afventer'});
+    ensureShift({...sep8Hans,id:'KEN008IN2',person:'Kenneth Jørgensen',role:'Fotograf',task:'Fotograf på ekstra optagelse af Regin og Vón, der går ind i Aulan.',status:'Bekræftet'});
+    ensureShift({...sep8Hans,id:'FIN008IN2',person:'Finnur Koba',role:'Lagt til rættis / Klip',task:'Planlagt med på ekstra optagelse af Regin og Vón, der går ind i Aulan. Afventer bekræftelse.',status:'Afventer'});
+    ensureShift({...sep8Hans,id:'HAN008IN2',person:'Hans Poulsen',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Regin og Vón, der går ind i Aulan.',status:'Bekræftet'});
 
     // 10. september: den bekræftede fælles session erstatter de gamle forslag fra Week-planen.
     const staleSep10Ids = new Set(['WEEK035','WEEK036','BAND-P012','BAND-J012']);
@@ -62,14 +70,21 @@ exports.handler = async function(event, context) {
       x.notes = fixNaina(x.notes);
     });
 
-    // Aktuel 8/9 event.
-    program = program.filter(x => !(x && x.id === 'WP-IN-0908'));
+    // Aktuelle 8/9 events.
+    program = program.filter(x => !(x && (x.id === 'WP-IN-0908' || x.id === 'WP-IN-0908-HANS')));
     program.push({
       id:'WP-IN-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'13:00',end:'14:00',
       activity:'Naina Jórun og Tórfríð går ind i Aulan',
       participants:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Kenneth Jørgensen, Finnur Koba',
-      responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',
-      notes:'Naina Jórun, Tórfríð, Benjamin Djurhuus og Kenneth Jørgensen er bekræftet. Finnur Koba er planlagt med.'
+      responsible:'Benjamin Djurhuus / Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',
+      notes:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Kenneth Jørgensen og Finnur Koba er bekræftet.'
+    });
+    program.push({
+      id:'WP-IN-0908-HANS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'14:00',end:'15:00',
+      activity:'Regin og Vón går ind i Aulan',
+      participants:'Regin, Vón, Hans Poulsen, Kenneth Jørgensen, Finnur Koba',
+      responsible:'Hans Poulsen / Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Delvist bekræftet',
+      notes:'Hans Poulsen og Kenneth Jørgensen er bekræftet. Regin, Vón og Finnur Koba afventer bekræftelse.'
     });
 
     // Aktuel 10/9 session.
