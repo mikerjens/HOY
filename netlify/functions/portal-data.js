@@ -46,10 +46,20 @@ exports.handler = async function(event, context) {
     ensureShift(gudrun('GUD005VON','Vón','13:00','14:00'));
     ensureShift(gudrun('GUD005HEL','Helge','14:00','16:00'));
 
-    // 7. september: Vár skal lande på portalnavnet "Vár".
+    // 7. september: Vár og Helge med Kim & Co. og Jens som musikproducer.
     ensureShift({
       id:'WEEK031',date:'2026-09-07',start:'12:00',end:'15:00',person:'Vár',role:'Spíri',
       task:'Træning med Kim Hansen og orkestret. Jens L. Thomsen deltager som Várs musikproducer.',
+      location:'Aulan, Hoydalar',activity:'Spíri træning',status:'Bekræftet'
+    });
+    ensureShift({
+      id:'HEL007J',date:'2026-09-07',start:'15:00',end:'18:00',person:'Helge',role:'Spíri',
+      task:'Træning med Kim Hansen og orkestret. Jens L. Thomsen deltager som Helges musikproducer.',
+      location:'Aulan, Hoydalar',activity:'Spíri træning',status:'Bekræftet'
+    });
+    ensureShift({
+      id:'JENS007H',date:'2026-09-07',start:'15:00',end:'18:00',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',
+      task:'Musikproducer/rådgiver sammen med orkestret under Helges træning.',
       location:'Aulan, Hoydalar',activity:'Spíri træning',status:'Bekræftet'
     });
 
