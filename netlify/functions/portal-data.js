@@ -26,16 +26,28 @@ exports.handler = async function(event, context) {
     ensureShift({...sessionBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Deltager i fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Fokus på sange til én stjerne. Sessionen filmes; fotograf afventer.',status:'Bekræftet'});
     ensureShift({...sessionBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Foto-koordinering',task:'Ansvarlig for at finde og aftale fotograf til optagelse af den fælles sangundervisning. Selve fotografen afventer endelig aftale.',status:'Bekræftet'});
 
-    // Naina bruger både fornavn og mellemnavn til daglig. Bevar derfor "Naina Jórun"
-    // overalt i portalen, selv om den tidlige Week-import tidligere forkortede Spírar til ét navn.
+    // Naina bruger både fornavn og mellemnavn. Ret både personfelter og al tekst,
+    // der kommer fra den tidlige Week-import, så navnet vises ens overalt.
+    const fixNaina = value => String(value ?? '').replace(/\bNaina\b(?!\s+Jórun)/g, 'Naina Jórun');
     shifts.forEach(x => {
-      if (x && String(x.person || '').trim() === 'Naina') x.person = 'Naina Jórun';
+      if (!x) return;
+      x.person = fixNaina(x.person);
+      x.task = fixNaina(x.task);
+      x.activity = fixNaina(x.activity);
     });
 
     data.shifts = shifts.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''), 'da'));
     data.people = [...new Set(data.shifts.map(x => x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
 
     const program = Array.isArray(data.program) ? data.program : [];
+    program.forEach(x => {
+      if (!x) return;
+      x.activity = fixNaina(x.activity);
+      x.participants = fixNaina(x.participants);
+      x.responsible = fixNaina(x.responsible);
+      x.notes = fixNaina(x.notes);
+    });
+
     if (!program.some(x => x && x.id === 'WP-GUD-0910')) {
       program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · Jónfinn finder fotograf',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Jónfinn Stenberg',location:'Location afventer',status:'Bekræftet',notes:'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn har ansvar for at finde og aftale fotograf.'});
     } else {
