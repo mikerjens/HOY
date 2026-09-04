@@ -23,9 +23,10 @@ exports.handler = async function(event, context) {
     // 8. september: ekstra optagelse af Benjamin Djurhuus’ Spírar, der går ind i Aulan.
     const sep8Base = {date:'2026-09-08',start:'13:00',end:'14:00',location:'Aulan, Hoydalar',activity:'Ekstra optagelse · indgang i Aulan'};
     ensureShift({...sep8Base,id:'TOR008IN',person:'Tórfríð',role:'Spíri',task:'Optagelse af Benjamin Djurhuus’ Spírar, der går ind i Aulan. Sammen med Naina Jórun.',status:'Bekræftet'});
-    ensureShift({...sep8Base,id:'NAI008IN',person:'Naina Jórun',role:'Spíri',task:'Ekstra optagelse med Tórfríð: de går ind i Aulan. Afventer Naina Jóruns endelige bekræftelse.',status:'Afventer'});
-    ensureShift({...sep8Base,id:'KEN008IN',person:'Kenneth Jørgensen',role:'Fotograf',task:'Fotograf på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
-    ensureShift({...sep8Base,id:'FIN008IN',person:'Finnur Koba',role:'Lagt til rættis / Klip',task:'Med på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Planlagt'});
+    ensureShift({...sep8Base,id:'NAI008IN',person:'Naina Jórun',role:'Spíri',task:'Bekræftet ekstra optagelse med Tórfríð: de går ind i Aulan. Naina Jórun har bekræftet sin deltagelse.',status:'Bekræftet'});
+    ensureShift({...sep8Base,id:'KEN008IN',person:'Kenneth Jørgensen',role:'Fotograf',task:'Bekræftet fotograf på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
+    ensureShift({...sep8Base,id:'FIN008IN',person:'Finnur Koba',role:'Lagt til rættis / Klip',task:'Planlagt med på ekstra optagelse af Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Planlagt'});
+    ensureShift({...sep8Base,id:'BEN008IN',person:'Benjamin Djurhuus',role:'Musikproducer / rådgiver',task:'Deltager i ekstra optagelse med sine Spírar Naina Jórun og Tórfríð, der går ind i Aulan.',status:'Bekræftet'});
 
     // 10. september: den bekræftede fælles session erstatter de gamle forslag fra Week-planen.
     const staleSep10Ids = new Set(['WEEK035','WEEK036','BAND-P012','BAND-J012']);
@@ -34,11 +35,11 @@ exports.handler = async function(event, context) {
     const sep10Location = 'Tórshavnar Musikkskúli, Landavegur 84, Tórshavn';
     const sep10Contact = 'Ved spørgsmål om lokalet kan Guðrun Sólja kontakte Ólavur Olsen direkte på +298 504740.';
     const sessionBase = {date:'2026-09-10',start:'11:00',end:'12:30',location:sep10Location,activity:'Sangtræning + optagelse',status:'Bekræftet'};
-    ensureShift({...sessionBase,id:'GUD010FILM',person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:'Fælles sangundervisning med Regin, Vón og Naina Jórun med fokus på sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet. '+sep10Contact});
-    ensureShift({...sessionBase,id:'REG010FILM',person:'Regin',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
-    ensureShift({...sessionBase,id:'VON010FILM',person:'Vón',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
-    ensureShift({...sessionBase,id:'NAI010FILM',person:'Naina Jórun',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
-    ensureShift({...sessionBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Instruktør på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Fokus på sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'GUD010FILM',person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:'Fælles sangundervisning med Regin, Vón og Naina Jórun. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet. '+sep10Contact});
+    ensureShift({...sessionBase,id:'REG010FILM',person:'Regin',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'VON010FILM',person:'Vón',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'NAI010FILM',person:'Naina Jórun',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Instruktør på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
     ensureShift({...sessionBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Fotograf',task:'Fotograf på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Jónfinn dækker optagelsen indtil evt. anden fotograf er fundet.'});
 
     const fixNaina = value => String(value ?? '').replace(/\bNaina\b(?!\s+Jórun)/g, 'Naina Jórun');
@@ -66,9 +67,9 @@ exports.handler = async function(event, context) {
     program.push({
       id:'WP-IN-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'13:00',end:'14:00',
       activity:'Naina Jórun og Tórfríð går ind i Aulan',
-      participants:'Naina Jórun, Tórfríð, Kenneth Jørgensen, Finnur Koba',
-      responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Delvist bekræftet',
-      notes:'Tórfríð og Kenneth Jørgensen er bekræftet. Naina Jórun afventer endelig bekræftelse. Finnur Koba er planlagt med.'
+      participants:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Kenneth Jørgensen, Finnur Koba',
+      responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',
+      notes:'Naina Jórun, Tórfríð, Benjamin Djurhuus og Kenneth Jørgensen er bekræftet. Finnur Koba er planlagt med.'
     });
 
     // Aktuel 10/9 session.
