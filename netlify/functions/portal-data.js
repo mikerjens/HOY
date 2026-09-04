@@ -118,6 +118,25 @@ exports.handler = async function(event, context) {
       x.activity = fixNaina(x.activity);
     });
 
+    // Portalen er live: skjul vagter/events der allerede er afsluttet i færøsk tid.
+    const nowParts = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
+      timeZone:'Atlantic/Faroe',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+    const faroeToday = `${nowParts.year}-${nowParts.month}-${nowParts.day}`;
+    const faroeNow = `${nowParts.hour}:${nowParts.minute}`;
+    const stillRelevant = x => {
+      if (!x || !x.date) return false;
+      if (x.date > faroeToday) return true;
+      if (x.date < faroeToday) return false;
+      const end = String(x.end||'').trim();
+      const start = String(x.start||'').trim();
+      if (end) return end > faroeNow;
+      if (start) return start >= faroeNow;
+      return true;
+    };
+    shifts = shifts.filter(stillRelevant);
+
     data.shifts = shifts.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''),'da'));
     data.people = [...new Set(data.shifts.map(x=>x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
 
@@ -142,6 +161,7 @@ exports.handler = async function(event, context) {
     program = program.filter(x => !(x && x.date === '2026-09-10' && x.id === 'WP-GUD-0910'));
     program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Fælles sangtræning med Guðrun Sólja · optagelse',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Maria Winther Olsen / Jónfinn Stenberg',location:sep10Location,status:'Bekræftet',notes:'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet. '+sep10Contact});
 
+    program = program.filter(stillRelevant);
     data.program = program.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
 
     return {...res,headers:{...(res.headers||{}),'cache-control':'no-store, max-age=0'},body:JSON.stringify(data)};
