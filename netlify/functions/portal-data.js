@@ -7,6 +7,9 @@ exports.handler = async function(event, context) {
     const data = JSON.parse(res.body || '{}');
     let shifts = Array.isArray(data.shifts) ? data.shifts : [];
 
+    // Søndag 6. september er nu helt fri: ingen træning, optagelse eller anden aktivitet.
+    shifts = shifts.filter(x => !(x && x.date === '2026-09-06'));
+
     const ensureShift = shift => {
       const i = shifts.findIndex(x => x && x.id === shift.id);
       if (i >= 0) shifts[i] = {...shifts[i], ...shift};
@@ -86,6 +89,8 @@ exports.handler = async function(event, context) {
     data.people = [...new Set(data.shifts.map(x => x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
 
     let program = Array.isArray(data.program) ? data.program : [];
+    // Ingen dag skal vises for søndag 6. september.
+    program = program.filter(x => !(x && x.date === '2026-09-06'));
     program.forEach(x => {
       if (!x) return;
       x.activity = fixNaina(x.activity);
