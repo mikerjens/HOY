@@ -150,6 +150,14 @@ exports.handler = async function(event, context) {
       x.notes = fixNaina(x.notes);
     });
 
+    // 5. september: gør sangtræningen til en rigtig dagsbegivenhed, så HOME kan vise den som næste begivenhed.
+    program = program.filter(x => !(x && x.date === '2026-09-05' && String(x.id||'').startsWith('WP-GUD-0905')));
+    const sep5ProgramBase = {date:'2026-09-05',dayType:'Sangtræning',part:'',location:'Lítli Skúli, 56B Hoyvíksvegur',status:'Bekræftet'};
+    program.push({...sep5ProgramBase,id:'WP-GUD-0905-1',start:'11:00',end:'12:00',activity:'Naina Jórun · sangtræning med Guðrun Sólja',participants:'Naina Jórun, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
+    program.push({...sep5ProgramBase,id:'WP-GUD-0905-2',start:'12:00',end:'13:00',activity:'Vár · sangtræning med Guðrun Sólja',participants:'Vár, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
+    program.push({...sep5ProgramBase,id:'WP-GUD-0905-3',start:'13:00',end:'14:00',activity:'Vón · sangtræning med Guðrun Sólja',participants:'Vón, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
+    program.push({...sep5ProgramBase,id:'WP-GUD-0905-4',start:'14:00',end:'16:00',activity:'Helge · sangtræning med Guðrun Sólja',participants:'Helge, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
+
     // 8. september: tydelig ankomstplan i den samlede dagsvisning.
     program = program.filter(x => !(x && ['WP-IN-0908','WP-IN-0908-HANS','WP-IN-0908-JENS'].includes(x.id)));
     const sep8Notes = 'Kenneth Jørgensen er fotograf 13:00–16:00. Finnur Koba er journalist. Ankomster: 13:00 Naina Jórun + Tórfríð, 14:00 Regin + Vón, 15:00 Helge + Vár.';
