@@ -5,10 +5,12 @@ exports.handler = async function(event, context) {
   if (!res || res.statusCode !== 200) return res;
   try {
     const data = JSON.parse(res.body || '{}');
-    const shifts = Array.isArray(data.shifts) ? data.shifts : [];
+    let shifts = Array.isArray(data.shifts) ? data.shifts : [];
 
     const ensureShift = shift => {
-      if (!shifts.some(x => x && x.id === shift.id)) shifts.push(shift);
+      const i = shifts.findIndex(x => x && x.id === shift.id);
+      if (i >= 0) shifts[i] = {...shifts[i], ...shift};
+      else shifts.push(shift);
     };
 
     ensureShift({
@@ -18,16 +20,18 @@ exports.handler = async function(event, context) {
       location: 'Aulan, Hoydalar', activity: 'Optagelse, del 4 · indkøring kamera', status: 'Bekræftet'
     });
 
-    const sessionBase = {date:'2026-09-10',start:'11:00',end:'12:30',location:'Location afventer',activity:'Sangtræning + optagelse'};
-    ensureShift({...sessionBase,id:'GUD010FILM',person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:'Fælles sangundervisning med Regin, Vón og Naina Jórun med fokus på sange til én stjerne. Sessionen skal filmes; fotograf afventer.',status:'Bekræftet'});
-    ensureShift({...sessionBase,id:'REG010FILM',person:'Regin',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',status:'Bekræftet'});
-    ensureShift({...sessionBase,id:'VON010FILM',person:'Vón',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',status:'Bekræftet'});
-    ensureShift({...sessionBase,id:'NAI010FILM',person:'Naina Jórun',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen skal filmes; fotograf afventer.',status:'Bekræftet'});
-    ensureShift({...sessionBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Deltager i fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Fokus på sange til én stjerne. Sessionen filmes; fotograf afventer.',status:'Bekræftet'});
-    ensureShift({...sessionBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Foto-koordinering',task:'Ansvarlig for at finde og aftale fotograf til optagelse af den fælles sangundervisning. Selve fotografen afventer endelig aftale.',status:'Bekræftet'});
+    // 10. september: den bekræftede fælles session erstatter de gamle forslag fra Week-planen.
+    const staleSep10Ids = new Set(['WEEK035','WEEK036','BAND-P012','BAND-J012']);
+    shifts = shifts.filter(x => !(x && x.date === '2026-09-10' && staleSep10Ids.has(x.id)));
 
-    // Naina bruger både fornavn og mellemnavn. Ret både personfelter og al tekst,
-    // der kommer fra den tidlige Week-import, så navnet vises ens overalt.
+    const sessionBase = {date:'2026-09-10',start:'11:00',end:'12:30',location:'Afklares',activity:'Sangtræning + optagelse',status:'Bekræftet'};
+    ensureShift({...sessionBase,id:'GUD010FILM',person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:'Fælles sangundervisning med Regin, Vón og Naina Jórun med fokus på sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'REG010FILM',person:'Regin',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'VON010FILM',person:'Vón',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'NAI010FILM',person:'Naina Jórun',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Instruktør på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Fokus på sange til én stjerne. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'});
+    ensureShift({...sessionBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Fotograf',task:'Fotograf på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun. Jónfinn dækker optagelsen indtil evt. anden fotograf er fundet.'});
+
     const fixNaina = value => String(value ?? '').replace(/\bNaina\b(?!\s+Jórun)/g, 'Naina Jórun');
     shifts.forEach(x => {
       if (!x) return;
@@ -39,7 +43,7 @@ exports.handler = async function(event, context) {
     data.shifts = shifts.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''), 'da'));
     data.people = [...new Set(data.shifts.map(x => x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
 
-    const program = Array.isArray(data.program) ? data.program : [];
+    let program = Array.isArray(data.program) ? data.program : [];
     program.forEach(x => {
       if (!x) return;
       x.activity = fixNaina(x.activity);
@@ -48,16 +52,23 @@ exports.handler = async function(event, context) {
       x.notes = fixNaina(x.notes);
     });
 
-    if (!program.some(x => x && x.id === 'WP-GUD-0910')) {
-      program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · Jónfinn finder fotograf',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Jónfinn Stenberg',location:'Location afventer',status:'Bekræftet',notes:'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn har ansvar for at finde og aftale fotograf.'});
-    } else {
-      const p = program.find(x => x && x.id === 'WP-GUD-0910');
-      p.activity = 'Guðrun Sólja med Regin, Vón, Naina Jórun og Maria · Jónfinn finder fotograf';
-      p.participants = 'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg';
-      p.responsible = 'Guðrun Sólja Jacobsen / Jónfinn Stenberg';
-      p.status = 'Bekræftet';
-      p.notes = 'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn har ansvar for at finde og aftale fotograf.';
-    }
+    // Fjern evt. gammel 10/9 programtekst og læg den aktuelle, bekræftede version ind.
+    program = program.filter(x => !(x && x.date === '2026-09-10' && x.id === 'WP-GUD-0910'));
+    program.push({
+      id:'WP-GUD-0910',
+      date:'2026-09-10',
+      dayType:'Sangtræning + optagelse',
+      part:'',
+      start:'11:00',
+      end:'12:30',
+      activity:'Fælles sangtræning med Guðrun Sólja · optagelse',
+      participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',
+      responsible:'Guðrun Sólja Jacobsen / Maria Winther Olsen / Jónfinn Stenberg',
+      location:'Afklares',
+      status:'Bekræftet',
+      notes:'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet.'
+    });
+
     data.program = program.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
 
     return {...res,headers:{...(res.headers||{}),'cache-control':'no-store, max-age=0'},body:JSON.stringify(data)};
