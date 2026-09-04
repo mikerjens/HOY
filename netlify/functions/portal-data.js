@@ -85,9 +85,7 @@ exports.handler = async function(event, context) {
     ensureShift({...sep8C,id:'FIN008IN3',person:'Finnur Koba',role:'Journalist',task:journalistBrief,activity:arrival15,status:'Bekræftet'});
     ensureShift({...sep8C,id:'JEN008IN3',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Helge og Vár.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
 
-    // 10. september: aktuel fælles session.
-    const staleSep10Ids = new Set(['WEEK035','WEEK036','BAND-P012','BAND-J012']);
-    shifts = shifts.filter(x => !(x && x.date === '2026-09-10' && staleSep10Ids.has(x.id)));
+    // 10. september: fælles sangsession 11:00–12:30. Week-planens separate bandforslag 13:00–17:00 bevares som forslag.
     const sep10Location = 'Tórshavnar Musikkskúli, Landavegur 84, Tórshavn';
     const sep10Contact = 'Ved spørgsmål om lokalet kan Guðrun Sólja kontakte Ólavur Olsen direkte på +298 504740.';
     const sessionBase = {date:'2026-09-10',start:'11:00',end:'12:30',location:sep10Location,activity:'Sangtræning + optagelse',status:'Bekræftet'};
