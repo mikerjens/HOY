@@ -1,0 +1,9 @@
+{
+  "name": "HOYDALAR Badge Test",
+  "short_name": "Badge Test",
+  "id": "/badge-test.html",
+  "start_url": "/badge-test.html",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#17233d"
+}
