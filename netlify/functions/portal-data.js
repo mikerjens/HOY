@@ -17,7 +17,6 @@ exports.handler = async function(event, context) {
     // 6. september er helt fri.
     shifts = shifts.filter(x => !(x && x.date === '2026-09-06'));
 
-    // Kendt kamera-indkøring.
     ensureShift({
       id:'EYD024',date:'2026-09-24',start:'13:30',end:'23:00',
       person:'Eyðun Müller Thomsen',role:'Fotograf / kamera · indkøring',
@@ -25,7 +24,6 @@ exports.handler = async function(event, context) {
       location:'Aulan, Hoydalar',activity:'Optagelse, del 4 · indkøring kamera',status:'Bekræftet'
     });
 
-    // 5. september: bekræftede sangtræninger hos Guðrun Sólja.
     const singing = (id, person, start, end) => ({
       id,date:'2026-09-05',start,end,person,role:'Spíri',
       task:'Sangtræning med Guðrun Sólja Jacobsen.',
@@ -46,7 +44,6 @@ exports.handler = async function(event, context) {
     ensureShift(gudrun('GUD005VON','Vón','13:00','14:00'));
     ensureShift(gudrun('GUD005HEL','Helge','14:00','16:00'));
 
-    // 7. september: Jonna skal kunne se frokosten i sit personlige skema.
     ensureShift({
       id:'JON007LUNCH',date:'2026-09-07',start:'11:00',end:'12:00',
       person:'Jonna Fritsdóttir Mortensen',role:'Catering / madansvarlig',
@@ -54,7 +51,6 @@ exports.handler = async function(event, context) {
       location:'Gentukostdeildin, Hoydalar',activity:'Orkesterfrokost',status:'Bekræftet'
     });
 
-    // 7. september: Vár og Helge med Kim & Co. og Jens i Gentukostdeildin.
     ensureShift({id:'WEEK031',date:'2026-09-07',start:'12:00',end:'15:00',person:'Vár',role:'Spíri',task:'Træning med Kim Hansen og orkestret. Jens L. Thomsen deltager som Várs musikproducer.',location:'Gentukostdeildin, Hoydalar',activity:'Spíri træning',status:'Bekræftet'});
     ensureShift({id:'HEL007J',date:'2026-09-07',start:'15:00',end:'18:00',person:'Helge',role:'Spíri',task:'Træning med Kim Hansen og orkestret. Jens L. Thomsen deltager som Helges musikproducer.',location:'Gentukostdeildin, Hoydalar',activity:'Spíri træning',status:'Bekræftet'});
     ensureShift({id:'JENS007H',date:'2026-09-07',start:'15:00',end:'18:00',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:'Musikproducer/rådgiver sammen med orkestret under Helges træning.',location:'Gentukostdeildin, Hoydalar',activity:'Spíri træning',status:'Bekræftet'});
@@ -65,7 +61,6 @@ exports.handler = async function(event, context) {
       }
     });
 
-    // 8. september: Kenneth er fotograf, Finnur er journalist. Personlige skemaer skal vise præcist hvem der ankommer hvornår.
     const photoBrief = 'Fotograf på hele ekstraoptagelsen 13:00–16:00. Optag de tre Spíri-par, når de ankommer og går ind i Aulan.';
     const journalistBrief = 'Journalist på hele ekstraoptagelsen 13:00–16:00. Tag imod de tre Spíri-par og følg forløbet, mens Kenneth filmer deres ankomst og indgang i Aulan.';
     const arrival13 = 'Naina Jórun + Tórfríð ankommer · indgang i Aulan';
@@ -93,7 +88,6 @@ exports.handler = async function(event, context) {
     ensureShift({...sep8C,id:'FIN008IN3',person:'Finnur Koba',role:'Journalist',task:journalistBrief,activity:arrival15,status:'Bekræftet'});
     ensureShift({...sep8C,id:'JEN008IN3',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Helge og Vár.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
 
-    // 10. september: kun den bekræftede fælles sangsession 11:00–12:30. Det tidligere bandforslag 13:00–17:00 er fjernet.
     const staleSep10Ids = new Set(['WEEK035','WEEK036','BAND-P012','BAND-J012']);
     shifts = shifts.filter(x => !(x && x.date === '2026-09-10' && staleSep10Ids.has(x.id)));
     const sep10Location = 'Tórshavnar Musikkskúli, Landavegur 84, Tórshavn';
@@ -118,7 +112,6 @@ exports.handler = async function(event, context) {
       x.activity = fixNaina(x.activity);
     });
 
-    // Portalen er live: skjul vagter/events der allerede er afsluttet i færøsk tid.
     const nowParts = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
       timeZone:'Atlantic/Faroe',year:'numeric',month:'2-digit',day:'2-digit',
       hour:'2-digit',minute:'2-digit',hourCycle:'h23'
@@ -150,7 +143,7 @@ exports.handler = async function(event, context) {
       x.notes = fixNaina(x.notes);
     });
 
-    // 5. september: gør sangtræningen til en rigtig dagsbegivenhed, så HOME kan vise den som næste begivenhed.
+    // 5. september: sangtræning som dagsbegivenhed.
     program = program.filter(x => !(x && x.date === '2026-09-05' && String(x.id||'').startsWith('WP-GUD-0905')));
     const sep5ProgramBase = {date:'2026-09-05',dayType:'Sangtræning',part:'',location:'Lítli Skúli, 56B Hoyvíksvegur',status:'Bekræftet'};
     program.push({...sep5ProgramBase,id:'WP-GUD-0905-1',start:'11:00',end:'12:00',activity:'Naina Jórun · sangtræning med Guðrun Sólja',participants:'Naina Jórun, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
@@ -158,14 +151,20 @@ exports.handler = async function(event, context) {
     program.push({...sep5ProgramBase,id:'WP-GUD-0905-3',start:'13:00',end:'14:00',activity:'Vón · sangtræning med Guðrun Sólja',participants:'Vón, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
     program.push({...sep5ProgramBase,id:'WP-GUD-0905-4',start:'14:00',end:'16:00',activity:'Helge · sangtræning med Guðrun Sólja',participants:'Helge, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
 
-    // 8. september: tydelig ankomstplan i den samlede dagsvisning.
+    // 7. september: musiktræningen skal være en rigtig dagsbegivenhed, så HOME ikke springer direkte til 8. september.
+    program = program.filter(x => !(x && x.date === '2026-09-07' && String(x.id||'').startsWith('WP-MUS-0907')));
+    const sep7Base = {date:'2026-09-07',dayType:'Musiktræning',part:'',location:'Gentukostdeildin, Hoydalar',status:'Bekræftet'};
+    program.push({...sep7Base,id:'WP-MUS-0907-1',start:'08:00',end:'11:00',activity:'Kim & Co. · orkester alene',participants:'Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen',responsible:'Kim Hansen',notes:'Orkestret spiller alene om formiddagen.'});
+    program.push({...sep7Base,id:'WP-MUS-0907-2',start:'11:00',end:'12:00',activity:'Orkesterfrokost',participants:'Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen',responsible:'Jonna Fritsdóttir Mortensen',notes:'Let frokost i Gentukostdeildin.'});
+    program.push({...sep7Base,id:'WP-MUS-0907-3',start:'12:00',end:'15:00',activity:'Vár træner med Kim & Co. + Jens L. Thomsen',participants:'Vár, Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',notes:'Bekræftet.'});
+    program.push({...sep7Base,id:'WP-MUS-0907-4',start:'15:00',end:'18:00',activity:'Helge træner med Kim & Co. + Jens L. Thomsen',participants:'Helge, Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',notes:'Bekræftet.'});
+
     program = program.filter(x => !(x && ['WP-IN-0908','WP-IN-0908-HANS','WP-IN-0908-JENS'].includes(x.id)));
     const sep8Notes = 'Kenneth Jørgensen er fotograf 13:00–16:00. Finnur Koba er journalist. Ankomster: 13:00 Naina Jórun + Tórfríð, 14:00 Regin + Vón, 15:00 Helge + Vár.';
     program.push({id:'WP-IN-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'13:00',end:'14:00',activity:arrival13,participants:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Kenneth Jørgensen, Finnur Koba',responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes:sep8Notes});
     program.push({id:'WP-IN-0908-HANS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'14:00',end:'15:00',activity:arrival14,participants:'Regin, Vón, Hans Poulsen, Kenneth Jørgensen, Finnur Koba',responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Delvist bekræftet',notes:sep8Notes});
     program.push({id:'WP-IN-0908-JENS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'15:00',end:'16:00',activity:arrival15,participants:'Helge, Vár, Jens L. Thomsen, Kenneth Jørgensen, Finnur Koba',responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes:sep8Notes});
 
-    // 10. september: dagsprogram.
     program = program.filter(x => !(x && x.date === '2026-09-10' && x.id === 'WP-GUD-0910'));
     program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Fælles sangtræning med Guðrun Sólja · optagelse',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Maria Winther Olsen / Jónfinn Stenberg',location:sep10Location,status:'Bekræftet',notes:'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet. '+sep10Contact});
 
