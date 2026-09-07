@@ -30,12 +30,25 @@ exports.handler = async function(event, context) {
     const arr14='Regin + Vón ankommer · indgang i Aulan';
     const arr15='Helge + Vár ankommer · indgang i Aulan';
 
+    // Aulan-optagelserne skal altid ligge eksplicit i de personlige skemaer.
+    upsert({...a,id:'TOR008IN',person:'Tórfríð',role:'Spíri',task:'Indgangsoptagelse i Aulan sammen med Naina Jórun og musikproducer Benjamin Djurhuus.',activity:arr13});
+    upsert({...a,id:'NAI008IN',person:'Naina Jórun',role:'Spíri',task:'Indgangsoptagelse i Aulan sammen med Tórfríð og musikproducer Benjamin Djurhuus.',activity:arr13});
+    upsert({...a,id:'BEN008IN',person:'Benjamin Djurhuus',role:'Musikproducer / rådgiver',task:'Med på indgangsoptagelsen med Naina Jórun og Tórfríð.',activity:arr13});
     upsert({...a,id:'THO008IN1',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Naina Jórun og Tórfríð ankommer kl. 13:00.',activity:arr13});
     upsert({...a,id:'FIN008IN',person:'Finnur Koba',role:'Journalist / optagelse',task:'Indgangsoptagelse sammen med Thomas Koba. Naina Jórun og Tórfríð ankommer kl. 13:00.',activity:arr13});
+
+    upsert({...b,id:'REG008IN2',person:'Regin',role:'Spíri',task:'Indgangsoptagelse i Aulan sammen med Vón og musikproducer Hans Poulsen.',activity:arr14});
+    upsert({...b,id:'VON008IN2',person:'Vón',role:'Spíri',task:'Indgangsoptagelse i Aulan sammen med Regin og musikproducer Hans Poulsen.',activity:arr14,status:'Afventer'});
+    upsert({...b,id:'HAN008IN2',person:'Hans Poulsen',role:'Musikproducer / rådgiver',task:'Med på indgangsoptagelsen med Regin og Vón.',activity:arr14});
     upsert({...b,id:'THO008IN2',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Regin og Vón ankommer kl. 14:00.',activity:arr14});
     upsert({...b,id:'FIN008IN2',person:'Finnur Koba',role:'Journalist / optagelse',task:'Indgangsoptagelse sammen med Thomas Koba. Regin og Vón ankommer kl. 14:00.',activity:arr14});
+
+    upsert({...c,id:'HEL008IN3',person:'Helge',role:'Spíri',task:'Indgangsoptagelse i Aulan sammen med Vár og musikproducer Jens L. Thomsen.',activity:arr15});
+    upsert({...c,id:'VAR008IN3',person:'Vár',role:'Spíri',task:'Indgangsoptagelse i Aulan sammen med Helge og musikproducer Jens L. Thomsen.',activity:arr15});
+    upsert({...c,id:'JEN008IN3',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:'Med på indgangsoptagelsen med Helge og Vár.',activity:arr15});
     upsert({...c,id:'THO008IN3',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Helge og Vár ankommer kl. 15:00.',activity:arr15});
     upsert({...c,id:'FIN008IN3',person:'Finnur Koba',role:'Journalist / optagelse',task:'Indgangsoptagelse sammen med Thomas Koba. Helge og Vár ankommer kl. 15:00.',activity:arr15});
+
     upsert({id:'KEN008BEAUTY',date:'2026-09-08',start:'13:00',end:'16:00',person:'Kenneth Jørgensen',role:'Fotograf',task:'Filmer beauty shots af Hoydalar om eftermiddagen. Thomas Koba og Finnur Koba håndterer de tre indgangsoptagelser.',location:'Hoydalar',activity:'Beauty shots af Hoydalar',status:'Bekræftet'});
 
     // Sen optagelse 8. september i Vestmanna.
