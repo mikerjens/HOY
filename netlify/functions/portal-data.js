@@ -49,7 +49,7 @@ exports.handler = async function(event, context) {
     upsert({...c,id:'THO008IN3',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Helge og Vár ankommer kl. 15:00.',activity:arr15});
     upsert({...c,id:'FIN008IN3',person:'Finnur Koba',role:'Journalist / optagelse',task:'Indgangsoptagelse sammen med Thomas Koba. Helge og Vár ankommer kl. 15:00.',activity:arr15});
 
-    upsert({id:'KEN008BEAUTY',date:'2026-09-08',start:'13:00',end:'16:00',person:'Kenneth Jørgensen',role:'Fotograf',task:'Filmer beauty shots af Hoydalar om eftermiddagen. Thomas Koba og Finnur Koba håndterer de tre indgangsoptagelser.',location:'Hoydalar',activity:'Beauty shots af Hoydalar',status:'Bekræftet'});
+    upsert({id:'KEN008BEAUTY',date:'2026-09-08',start:'08:00',end:'16:00',person:'Kenneth Jørgensen',role:'Fotograf',task:'Filmer beauty shots af Hoydalar kl. 08:00–16:00. Dette er Kenneths eneste opgave den 8. september. Thomas Koba og Finnur Koba håndterer de tre indgangsoptagelser.',location:'Hoydalar',activity:'Beauty shots af Hoydalar',status:'Bekræftet'});
 
     // Sen optagelse 8. september i Vestmanna.
     upsert({id:'VAR008VEST',date:'2026-09-08',start:'17:00',end:'19:00',person:'Vár',role:'Spíri',task:'Filmes i Vestmanna af Thomas Koba og Finnur Koba.',location:'Vestmanna',activity:'Optagelse · Vár i Vestmanna',status:'Planlagt'});
@@ -79,11 +79,11 @@ exports.handler = async function(event, context) {
 
     // Dagsvisning 8. september.
     program = program.filter(x => !(x && x.date === '2026-09-08'));
-    const notes8='Thomas Koba og Finnur Koba laver de tre indgangsoptagelser. Kenneth Jørgensen filmer beauty shots af Hoydalar 13:00–16:00. Ingen orkestertræning og ingen frokost.';
+    const notes8='Thomas Koba og Finnur Koba laver de tre indgangsoptagelser. Kenneth Jørgensen filmer beauty shots af Hoydalar 08:00–16:00. Ingen orkestertræning og ingen frokost.';
     program.push({id:'WP-IN-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'13:00',end:'14:00',activity:arr13,participants:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes:notes8});
     program.push({id:'WP-IN-0908-HANS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'14:00',end:'15:00',activity:arr14,participants:'Regin, Vón, Hans Poulsen, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Aulan, Hoydalar',status:'Delvist bekræftet',notes:notes8});
     program.push({id:'WP-IN-0908-JENS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'15:00',end:'16:00',activity:arr15,participants:'Helge, Vár, Jens L. Thomsen, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes:notes8});
-    program.push({id:'WP-BEAUTY-0908',date:'2026-09-08',dayType:'Beauty shots',part:'',start:'13:00',end:'16:00',activity:'Kenneth Jørgensen filmer beauty shots af Hoydalar',participants:'Kenneth Jørgensen',responsible:'Kenneth Jørgensen',location:'Hoydalar',status:'Bekræftet',notes:'Foregår parallelt med indgangsoptagelserne i Aulan.'});
+    program.push({id:'WP-BEAUTY-0908',date:'2026-09-08',dayType:'Beauty shots',part:'',start:'08:00',end:'16:00',activity:'Kenneth Jørgensen filmer beauty shots af Hoydalar',participants:'Kenneth Jørgensen',responsible:'Kenneth Jørgensen',location:'Hoydalar',status:'Bekræftet',notes:'Kenneths eneste opgave den 8. september.'});
     program.push({id:'WP-VEST-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'17:00',end:'19:00',activity:'Vár filmes i Vestmanna',participants:'Vár, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Vestmanna',status:'Planlagt',notes:'Ca. 17:00–19:00.'});
 
     // Dagsvisning 9. september.
