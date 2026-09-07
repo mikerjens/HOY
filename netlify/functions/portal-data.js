@@ -3,176 +3,72 @@ const base = require('./portal-data-base.js');
 exports.handler = async function(event, context) {
   const res = await base.handler(event, context);
   if (!res || res.statusCode !== 200) return res;
-
   try {
     const data = JSON.parse(res.body || '{}');
     let shifts = Array.isArray(data.shifts) ? data.shifts : [];
-
-    const ensureShift = shift => {
-      const i = shifts.findIndex(x => x && x.id === shift.id);
-      if (i >= 0) shifts[i] = {...shifts[i], ...shift};
-      else shifts.push(shift);
-    };
-
-    // 6. september er helt fri.
-    shifts = shifts.filter(x => !(x && x.date === '2026-09-06'));
-
-    ensureShift({
-      id:'EYD024',date:'2026-09-24',start:'13:30',end:'23:00',
-      person:'Eyðun Müller Thomsen',role:'Fotograf / kamera · indkøring',
-      task:'Går med på kamera/foto under Del 4 for at lære funktionen, som han selv skal dække på Del 5 den 28. september.',
-      location:'Aulan, Hoydalar',activity:'Optagelse, del 4 · indkøring kamera',status:'Bekræftet'
-    });
-
-    const singing = (id, person, start, end) => ({
-      id,date:'2026-09-05',start,end,person,role:'Spíri',
-      task:'Sangtræning med Guðrun Sólja Jacobsen.',
-      location:'Lítli Skúli, 56B Hoyvíksvegur',activity:'Sangtræning · Guðrun Sólja',status:'Bekræftet'
-    });
-    ensureShift(singing('NAINA005G','Naina Jórun','11:00','12:00'));
-    ensureShift(singing('VAR005G','Vár','12:00','13:00'));
-    ensureShift(singing('VON005G','Vón','13:00','14:00'));
-    ensureShift(singing('HEL005G','Helge','14:00','16:00'));
-
-    const gudrun = (id, person, start, end) => ({
-      id,date:'2026-09-05',start,end,person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',
-      task:`Sangtræning med ${person}.`,location:'Lítli Skúli, 56B Hoyvíksvegur',
-      activity:`Sangtræning · ${person}`,status:'Bekræftet'
-    });
-    ensureShift(gudrun('GUD005NAI','Naina Jórun','11:00','12:00'));
-    ensureShift(gudrun('GUD005VAR','Vár','12:00','13:00'));
-    ensureShift(gudrun('GUD005VON','Vón','13:00','14:00'));
-    ensureShift(gudrun('GUD005HEL','Helge','14:00','16:00'));
-
-    ensureShift({
-      id:'JON007LUNCH',date:'2026-09-07',start:'11:00',end:'12:00',
-      person:'Jonna Fritsdóttir Mortensen',role:'Catering / madansvarlig',
-      task:'Sørger for orkesterfrokost til Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg og Jóhannus á Rógvu Joensen. Let frokost med pålæg, brød m.m.',
-      location:'Gentukostdeildin, Hoydalar',activity:'Orkesterfrokost',status:'Bekræftet'
-    });
-
-    ensureShift({id:'WEEK031',date:'2026-09-07',start:'12:00',end:'15:00',person:'Vár',role:'Spíri',task:'Træning med Kim Hansen og orkestret. Jens L. Thomsen deltager som Várs musikproducer.',location:'Gentukostdeildin, Hoydalar',activity:'Spíri træning',status:'Bekræftet'});
-    ensureShift({id:'HEL007J',date:'2026-09-07',start:'15:00',end:'18:00',person:'Helge',role:'Spíri',task:'Træning med Kim Hansen og orkestret. Jens L. Thomsen deltager som Helges musikproducer.',location:'Gentukostdeildin, Hoydalar',activity:'Spíri træning',status:'Bekræftet'});
-    ensureShift({id:'JENS007H',date:'2026-09-07',start:'15:00',end:'18:00',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:'Musikproducer/rådgiver sammen med orkestret under Helges træning.',location:'Gentukostdeildin, Hoydalar',activity:'Spíri træning',status:'Bekræftet'});
-    shifts.forEach(x => {
-      if (!x || x.date !== '2026-09-07') return;
-      if (['Kim Hansen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Vár Miðberg','Vár','Vár Isaksen','Helge','Jens L. Thomsen'].includes(String(x.person||''))) {
-        if (/musik|spíri|orkester|træning/i.test(String(x.activity||'')+' '+String(x.task||''))) x.location='Gentukostdeildin, Hoydalar';
-      }
-    });
-
-    const photoBrief = 'Fotograf på hele ekstraoptagelsen 13:00–16:00. Optag de tre Spíri-par, når de ankommer og går ind i Aulan.';
-    const journalistBrief = 'Journalist på hele ekstraoptagelsen 13:00–16:00. Tag imod de tre Spíri-par og følg forløbet, mens Kenneth filmer deres ankomst og indgang i Aulan.';
-    const arrival13 = 'Naina Jórun + Tórfríð ankommer · indgang i Aulan';
-    const arrival14 = 'Regin + Vón ankommer · indgang i Aulan';
-    const arrival15 = 'Helge + Vár ankommer · indgang i Aulan';
-
-    const sep8A = {date:'2026-09-08',start:'13:00',end:'14:00',location:'Aulan, Hoydalar'};
-    ensureShift({...sep8A,id:'TOR008IN',person:'Tórfríð',role:'Spíri',task:'Ekstra optagelse med Naina Jórun: de går ind i Aulan.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-    ensureShift({...sep8A,id:'NAI008IN',person:'Naina Jórun',role:'Spíri',task:'Ekstra optagelse med Tórfríð: de går ind i Aulan.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-    ensureShift({...sep8A,id:'KEN008IN',person:'Kenneth Jørgensen',role:'Fotograf',task:photoBrief,activity:arrival13,status:'Bekræftet'});
-    ensureShift({...sep8A,id:'FIN008IN',person:'Finnur Koba',role:'Journalist',task:journalistBrief,activity:arrival13,status:'Bekræftet'});
-    ensureShift({...sep8A,id:'BEN008IN',person:'Benjamin Djurhuus',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Naina Jórun og Tórfríð.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-
-    const sep8B = {date:'2026-09-08',start:'14:00',end:'15:00',location:'Aulan, Hoydalar'};
-    ensureShift({...sep8B,id:'REG008IN2',person:'Regin',role:'Spíri',task:'Ekstra optagelse med Vón: de går ind i Aulan.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-    ensureShift({...sep8B,id:'VON008IN2',person:'Vón',role:'Spíri',task:'Ekstra optagelse med Regin: de går ind i Aulan.',activity:'Ekstra optagelse · indgang i Aulan',status:'Afventer'});
-    ensureShift({...sep8B,id:'KEN008IN2',person:'Kenneth Jørgensen',role:'Fotograf',task:photoBrief,activity:arrival14,status:'Bekræftet'});
-    ensureShift({...sep8B,id:'FIN008IN2',person:'Finnur Koba',role:'Journalist',task:journalistBrief,activity:arrival14,status:'Bekræftet'});
-    ensureShift({...sep8B,id:'HAN008IN2',person:'Hans Poulsen',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Regin og Vón.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-
-    const sep8C = {date:'2026-09-08',start:'15:00',end:'16:00',location:'Aulan, Hoydalar'};
-    ensureShift({...sep8C,id:'HEL008IN3',person:'Helge',role:'Spíri',task:'Ekstra optagelse med Vár: de går ind i Aulan.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-    ensureShift({...sep8C,id:'VAR008IN3',person:'Vár',role:'Spíri',task:'Ekstra optagelse med Helge: de går ind i Aulan.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-    ensureShift({...sep8C,id:'KEN008IN3',person:'Kenneth Jørgensen',role:'Fotograf',task:photoBrief,activity:arrival15,status:'Bekræftet'});
-    ensureShift({...sep8C,id:'FIN008IN3',person:'Finnur Koba',role:'Journalist',task:journalistBrief,activity:arrival15,status:'Bekræftet'});
-    ensureShift({...sep8C,id:'JEN008IN3',person:'Jens L. Thomsen',role:'Musikproducer / rådgiver',task:'Med på ekstra optagelse af Helge og Vár.',activity:'Ekstra optagelse · indgang i Aulan',status:'Bekræftet'});
-
-    const staleSep10Ids = new Set(['WEEK035','WEEK036','BAND-P012','BAND-J012']);
-    shifts = shifts.filter(x => !(x && x.date === '2026-09-10' && staleSep10Ids.has(x.id)));
-    const sep10Location = 'Tórshavnar Musikkskúli, Landavegur 84, Tórshavn';
-    const sep10Contact = 'Ved spørgsmål om lokalet kan Guðrun Sólja kontakte Ólavur Olsen direkte på +298 504740.';
-    const sessionBase = {date:'2026-09-10',start:'11:00',end:'12:30',location:sep10Location,activity:'Sangtræning + optagelse',status:'Bekræftet'};
-    ensureShift({...sessionBase,id:'GUD010FILM',person:'Guðrun Sólja Jacobsen',role:'Sangunderviser',task:'Fælles sangundervisning med Regin, Vón og Naina Jórun. Sessionen filmes; Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet. '+sep10Contact});
-    ensureShift({...sessionBase,id:'REG010FILM',person:'Regin',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sessionen filmes.'});
-    ensureShift({...sessionBase,id:'VON010FILM',person:'Vón',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sessionen filmes.'});
-    ensureShift({...sessionBase,id:'NAI010FILM',person:'Naina Jórun',role:'Spíri',task:'Fælles sangtræning med Guðrun Sólja. Sessionen filmes.'});
-    ensureShift({...sessionBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Instruktør på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun.'});
-    ensureShift({...sessionBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Fotograf',task:'Fotograf på fælles sangundervisning med Guðrun Sólja, Regin, Vón og Naina Jórun.'});
-
-    const fixNaina = value => String(value ?? '').replace(/\bNaina\b(?!\s+Jórun)/g, 'Naina Jórun');
-    const fixVarPerson = value => {
-      const v = String(value ?? '').trim();
-      return /^Vár Isaksen$/i.test(v) ? 'Vár' : v;
-    };
-    shifts.forEach(x => {
-      if (!x) return;
-      x.person = fixVarPerson(fixNaina(x.person));
-      x.task = fixNaina(x.task);
-      x.activity = fixNaina(x.activity);
-    });
-
-    const nowParts = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
-      timeZone:'Atlantic/Faroe',year:'numeric',month:'2-digit',day:'2-digit',
-      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
-    }).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-    const faroeToday = `${nowParts.year}-${nowParts.month}-${nowParts.day}`;
-    const faroeNow = `${nowParts.hour}:${nowParts.minute}`;
-    const stillRelevant = x => {
-      if (!x || !x.date) return false;
-      if (x.date > faroeToday) return true;
-      if (x.date < faroeToday) return false;
-      const end = String(x.end||'').trim();
-      const start = String(x.start||'').trim();
-      if (end) return end > faroeNow;
-      if (start) return start >= faroeNow;
-      return true;
-    };
-    shifts = shifts.filter(stillRelevant);
-
-    data.shifts = shifts.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''),'da'));
-    data.people = [...new Set(data.shifts.map(x=>x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
-
     let program = Array.isArray(data.program) ? data.program : [];
-    program = program.filter(x => !(x && x.date === '2026-09-06'));
-    program.forEach(x => {
-      if (!x) return;
-      x.activity = fixNaina(x.activity);
-      x.participants = fixNaina(x.participants);
-      x.responsible = fixNaina(x.responsible);
-      x.notes = fixNaina(x.notes);
-    });
 
-    // 5. september: sangtræning som dagsbegivenhed.
-    program = program.filter(x => !(x && x.date === '2026-09-05' && String(x.id||'').startsWith('WP-GUD-0905')));
-    const sep5ProgramBase = {date:'2026-09-05',dayType:'Sangtræning',part:'',location:'Lítli Skúli, 56B Hoyvíksvegur',status:'Bekræftet'};
-    program.push({...sep5ProgramBase,id:'WP-GUD-0905-1',start:'11:00',end:'12:00',activity:'Naina Jórun · sangtræning med Guðrun Sólja',participants:'Naina Jórun, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
-    program.push({...sep5ProgramBase,id:'WP-GUD-0905-2',start:'12:00',end:'13:00',activity:'Vár · sangtræning med Guðrun Sólja',participants:'Vár, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
-    program.push({...sep5ProgramBase,id:'WP-GUD-0905-3',start:'13:00',end:'14:00',activity:'Vón · sangtræning med Guðrun Sólja',participants:'Vón, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
-    program.push({...sep5ProgramBase,id:'WP-GUD-0905-4',start:'14:00',end:'16:00',activity:'Helge · sangtræning med Guðrun Sólja',participants:'Helge, Guðrun Sólja Jacobsen',responsible:'Guðrun Sólja Jacobsen',notes:'Bekræftet.'});
+    const upsert = s => {
+      const i = shifts.findIndex(x => x && x.id === s.id);
+      if (i >= 0) shifts[i] = {...shifts[i], ...s}; else shifts.push(s);
+    };
+    const fixNaina = v => String(v ?? '').replace(/\bNaina\b(?!\s+Jórun)/g,'Naina Jórun');
+    const fixVar = v => /^Vár Isaksen$/i.test(String(v ?? '').trim()) ? 'Vár' : String(v ?? '').trim();
 
-    // 7. september: musiktræningen skal være en rigtig dagsbegivenhed, så HOME ikke springer direkte til 8. september.
-    program = program.filter(x => !(x && x.date === '2026-09-07' && String(x.id||'').startsWith('WP-MUS-0907')));
-    const sep7Base = {date:'2026-09-07',dayType:'Musiktræning',part:'',location:'Gentukostdeildin, Hoydalar',status:'Bekræftet'};
-    program.push({...sep7Base,id:'WP-MUS-0907-1',start:'08:00',end:'11:00',activity:'Kim & Co. · orkester alene',participants:'Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen',responsible:'Kim Hansen',notes:'Orkestret spiller alene om formiddagen.'});
-    program.push({...sep7Base,id:'WP-MUS-0907-2',start:'11:00',end:'12:00',activity:'Orkesterfrokost',participants:'Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen',responsible:'Jonna Fritsdóttir Mortensen',notes:'Let frokost i Gentukostdeildin.'});
-    program.push({...sep7Base,id:'WP-MUS-0907-3',start:'12:00',end:'15:00',activity:'Vár træner med Kim & Co. + Jens L. Thomsen',participants:'Vár, Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',notes:'Bekræftet.'});
-    program.push({...sep7Base,id:'WP-MUS-0907-4',start:'15:00',end:'18:00',activity:'Helge træner med Kim & Co. + Jens L. Thomsen',participants:'Helge, Kim Hansen, Pauli Reinert Poulsen, Vár Miðberg, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',notes:'Bekræftet.'});
+    // Brug kun aktive vagter.
+    shifts = shifts.filter(x => x && !/^aflyst$/i.test(String(x.status||'').trim()));
 
-    program = program.filter(x => !(x && ['WP-IN-0908','WP-IN-0908-HANS','WP-IN-0908-JENS'].includes(x.id)));
-    const sep8Notes = 'Kenneth Jørgensen er fotograf 13:00–16:00. Finnur Koba er journalist. Ankomster: 13:00 Naina Jórun + Tórfríð, 14:00 Regin + Vón, 15:00 Helge + Vár.';
-    program.push({id:'WP-IN-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'13:00',end:'14:00',activity:arrival13,participants:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Kenneth Jørgensen, Finnur Koba',responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes:sep8Notes});
-    program.push({id:'WP-IN-0908-HANS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'14:00',end:'15:00',activity:arrival14,participants:'Regin, Vón, Hans Poulsen, Kenneth Jørgensen, Finnur Koba',responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Delvist bekræftet',notes:sep8Notes});
-    program.push({id:'WP-IN-0908-JENS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'15:00',end:'16:00',activity:arrival15,participants:'Helge, Vár, Jens L. Thomsen, Kenneth Jørgensen, Finnur Koba',responsible:'Kenneth Jørgensen / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes:sep8Notes});
+    // 8. september: ingen orkestertræning og ingen frokost.
+    // Kenneth laver beauty shots. Thomas Koba + Finnur Koba laver indgangsoptagelserne.
+    const removeSep8 = new Set(['KEN008IN','KEN008IN2','KEN008IN3','WEEK033','BAND-P010','BAND-J010']);
+    shifts = shifts.filter(x => !(x && x.date === '2026-09-08' && removeSep8.has(String(x.id||''))));
 
+    const a={date:'2026-09-08',start:'13:00',end:'14:00',location:'Aulan, Hoydalar',status:'Bekræftet'};
+    const b={date:'2026-09-08',start:'14:00',end:'15:00',location:'Aulan, Hoydalar',status:'Bekræftet'};
+    const c={date:'2026-09-08',start:'15:00',end:'16:00',location:'Aulan, Hoydalar',status:'Bekræftet'};
+    const arr13='Naina Jórun + Tórfríð ankommer · indgang i Aulan';
+    const arr14='Regin + Vón ankommer · indgang i Aulan';
+    const arr15='Helge + Vár ankommer · indgang i Aulan';
+
+    upsert({...a,id:'THO008IN1',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Naina Jórun og Tórfríð ankommer kl. 13:00.',activity:arr13});
+    upsert({...a,id:'FIN008IN',person:'Finnur Koba',role:'Journalist',task:'Indgangsoptagelse sammen med Thomas Koba. Naina Jórun og Tórfríð ankommer kl. 13:00.',activity:arr13});
+    upsert({...b,id:'THO008IN2',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Regin og Vón ankommer kl. 14:00.',activity:arr14});
+    upsert({...b,id:'FIN008IN2',person:'Finnur Koba',role:'Journalist',task:'Indgangsoptagelse sammen med Thomas Koba. Regin og Vón ankommer kl. 14:00.',activity:arr14});
+    upsert({...c,id:'THO008IN3',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Indgangsoptagelse sammen med Finnur Koba. Helge og Vár ankommer kl. 15:00.',activity:arr15});
+    upsert({...c,id:'FIN008IN3',person:'Finnur Koba',role:'Journalist',task:'Indgangsoptagelse sammen med Thomas Koba. Helge og Vár ankommer kl. 15:00.',activity:arr15});
+    upsert({id:'KEN008BEAUTY',date:'2026-09-08',start:'13:00',end:'16:00',person:'Kenneth Jørgensen',role:'Fotograf',task:'Filmer beauty shots af Hoydalar om eftermiddagen. Thomas Koba og Finnur Koba håndterer de tre indgangsoptagelser.',location:'Hoydalar',activity:'Beauty shots af Hoydalar',status:'Bekræftet'});
+
+    // Bevar deltager-vagterne fra Masterplanen, men normalisér navne.
+    shifts.forEach(x=>{ if(x){ x.person=fixVar(fixNaina(x.person)); x.task=fixNaina(x.task); x.activity=fixNaina(x.activity); }});
+
+    // Dagsvisning for 8. september.
+    program = program.filter(x => !(x && x.date === '2026-09-08'));
+    const notes='Thomas Koba og Finnur Koba laver de tre indgangsoptagelser. Kenneth Jørgensen filmer beauty shots af Hoydalar 13:00–16:00.';
+    program.push({id:'WP-IN-0908',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'13:00',end:'14:00',activity:arr13,participants:'Naina Jórun, Tórfríð, Benjamin Djurhuus, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes});
+    program.push({id:'WP-IN-0908-HANS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'14:00',end:'15:00',activity:arr14,participants:'Regin, Vón, Hans Poulsen, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Aulan, Hoydalar',status:'Delvist bekræftet',notes});
+    program.push({id:'WP-IN-0908-JENS',date:'2026-09-08',dayType:'Ekstra optagelse',part:'',start:'15:00',end:'16:00',activity:arr15,participants:'Helge, Vár, Jens L. Thomsen, Thomas Koba, Finnur Koba',responsible:'Thomas Koba / Finnur Koba',location:'Aulan, Hoydalar',status:'Bekræftet',notes});
+    program.push({id:'WP-BEAUTY-0908',date:'2026-09-08',dayType:'Beauty shots',part:'',start:'13:00',end:'16:00',activity:'Kenneth Jørgensen filmer beauty shots af Hoydalar',participants:'Kenneth Jørgensen',responsible:'Kenneth Jørgensen',location:'Hoydalar',status:'Bekræftet',notes:'Foregår parallelt med indgangsoptagelserne i Aulan.'});
+
+    // 10. september: fast fælles sangsession.
+    const loc10='Tórshavnar Musikkskúli, Landavegur 84, Tórshavn';
+    const contact10='Ved spørgsmål om lokalet kan Guðrun Sólja kontakte Ólavur Olsen direkte på +298 504740.';
     program = program.filter(x => !(x && x.date === '2026-09-10' && x.id === 'WP-GUD-0910'));
-    program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Fælles sangtræning med Guðrun Sólja · optagelse',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Maria Winther Olsen / Jónfinn Stenberg',location:sep10Location,status:'Bekræftet',notes:'Alle tre Spírar, Guðrun Sólja og Maria er bekræftet. Jónfinn Stenberg er sat som fotograf indtil evt. anden fotograf er fundet. '+sep10Contact});
+    program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Fælles sangtræning med Guðrun Sólja · optagelse',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Maria Winther Olsen / Jónfinn Stenberg',location:loc10,status:'Bekræftet',notes:contact10});
 
-    program = program.filter(stillRelevant);
-    data.program = program.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
+    program.forEach(x=>{ if(x){ x.activity=fixNaina(x.activity); x.participants=fixNaina(x.participants); x.responsible=fixNaina(x.responsible); x.notes=fixNaina(x.notes); }});
 
+    // Skjul afsluttede vagter/events i færøsk tid.
+    const p=Object.fromEntries(new Intl.DateTimeFormat('sv-SE',{timeZone:'Atlantic/Faroe',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+    const today=`${p.year}-${p.month}-${p.day}`, now=`${p.hour}:${p.minute}`;
+    const active=x=>x&&x.date&&(x.date>today||(x.date===today&&(!x.end||String(x.end)>now)));
+    shifts=shifts.filter(active);
+    program=program.filter(active);
+
+    data.shifts=shifts.sort((x,y)=>String(x.date||'').localeCompare(String(y.date||''))||String(x.start||'').localeCompare(String(y.start||''))||String(x.person||'').localeCompare(String(y.person||''),'da'));
+    data.people=[...new Set(data.shifts.map(x=>x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
+    data.program=program.sort((x,y)=>String(x.date||'').localeCompare(String(y.date||''))||String(x.start||'').localeCompare(String(y.start||'')));
     return {...res,headers:{...(res.headers||{}),'cache-control':'no-store, max-age=0'},body:JSON.stringify(data)};
-  } catch (e) {
+  } catch(e) {
     return res;
   }
 };
