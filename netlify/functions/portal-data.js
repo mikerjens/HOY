@@ -55,8 +55,10 @@ exports.handler = async function(event, context) {
     upsert({id:'THO008VEST',date:'2026-09-08',start:'17:00',end:'19:00',person:'Thomas Koba',role:'Fotograf / optagelse',task:'Filmer Vár i Vestmanna sammen med Finnur Koba.',location:'Vestmanna',activity:'Optagelse · Vár i Vestmanna',status:'Planlagt'});
     upsert({id:'FIN008VEST',date:'2026-09-08',start:'17:00',end:'19:00',person:'Finnur Koba',role:'Journalist / optagelse',task:'Filmer Vár i Vestmanna sammen med Thomas Koba.',location:'Vestmanna',activity:'Optagelse · Vár i Vestmanna',status:'Planlagt'});
 
-    // 9. september: BENJAMIN-SUPER-DAG.
+    // 9. september: BENJAMIN-SUPER-DAG. Fjern gamle generiske Week-vagter først.
     const loc9='Gentukostdeildin, Hoydalar';
+    const benPeople=new Set(['Kim Hansen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Tórfríð','Naina Jórun','Benjamin Djurhuus','Jonna Fritsdóttir Mortensen','Kenneth Jørgensen']);
+    shifts=shifts.filter(x=>!(x&&x.date==='2026-09-09'&&/Gentukostdeildin/i.test(String(x.location||''))&&benPeople.has(fixVar(fixNaina(x.person)))));
     upsert({id:'KIM009',date:'2026-09-09',start:'11:00',end:'18:00',person:'Kim Hansen',role:'Kapellmeistari',task:'BENJAMIN-SUPER-DAG. Tórfríð 12:00–15:00 og Naina Jórun 15:00–18:00.',location:loc9,activity:'BENJAMIN-SUPER-DAG',status:'Bekræftet'});
     upsert({id:'PAU009',date:'2026-09-09',start:'11:00',end:'18:00',person:'Pauli Reinert Poulsen',role:'Tónleikari',task:'BENJAMIN-SUPER-DAG med Kim & Co.',location:loc9,activity:'BENJAMIN-SUPER-DAG',status:'Bekræftet'});
     upsert({id:'JOH009',date:'2026-09-09',start:'11:00',end:'18:00',person:'Jóhannus á Rógvu Joensen',role:'Tónleikari',task:'BENJAMIN-SUPER-DAG med Kim & Co.',location:loc9,activity:'BENJAMIN-SUPER-DAG',status:'Bekræftet'});
