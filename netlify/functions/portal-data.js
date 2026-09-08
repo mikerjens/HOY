@@ -17,7 +17,6 @@ exports.handler = async function(event, context) {
     const fixNaina = v => String(v ?? '').replace(/\bNaina\b(?!\s+Jórun)/g, 'Naina Jórun');
     const fixVar = v => /^Vár Isaksen$/i.test(String(v ?? '').trim()) ? 'Vár' : String(v ?? '').trim();
 
-    // Fjern aflyste vagter og gamle Week-rækker, som ellers kan give dubletter.
     shifts = shifts.filter(x => x && !/^aflyst$/i.test(String(x.status||'').trim()));
     const staleIds = new Set([
       'KEN008IN','KEN008IN2','KEN008IN3','WEEK033','BAND-P010','BAND-J010',
@@ -67,17 +66,17 @@ exports.handler = async function(event, context) {
     upsert({id:'JON009LUNCH',date:'2026-09-09',start:'11:00',end:'12:00',person:'Jonna Fritsdóttir Mortensen',role:'Catering / madansvarlig',task:'Sørger for let orkesterfrokost til Kim Hansen, Pauli Reinert Poulsen og Jóhannus á Rógvu Joensen.',location:loc9,activity:'BENJAMIN-SUPER-DAG · Orkesterfrokost',status:'Bekræftet'});
     upsert({id:'KEN009FILM',date:'2026-09-09',start:'12:00',end:'18:00',person:'Kenneth Jørgensen',role:'Fotograf',task:'Film Tórfríð 12:00–15:00. Film derefter Naina Jórun 15:00–18:00. Ved spørgsmål: kontakt Michael Koba.',location:loc9,activity:'BENJAMIN-SUPER-DAG · filmoptagelse',status:'Bekræftet'});
 
-    // 10. september: sangsession + orkesterøvelse.
+    // 10. september: HANS-DAY + sangsession.
     const loc10='Gentukostdeildin, Hoydalar';
     const music10=[
-      ['KIM010B','Kim Hansen','Kapellmeistari','10:00','18:30','Orkesterøvelse. Vón 12:30–15:30 og Regin 15:30–18:30.'],
-      ['PAU010B','Pauli Reinert Poulsen','Tónleikari','10:00','18:30','Orkesterøvelse med Kim & Co.'],
-      ['JOH010B','Jóhannus á Rógvu Joensen','Tónleikari','10:00','18:30','Orkesterøvelse med Kim & Co.'],
-      ['VON010B','Vón','Spíri','12:30','15:30','Træning med Kim & Co.'],
-      ['REG010B','Regin','Spíri','15:30','18:30','Træning med Kim & Co.'],
-      ['HAN010B','Hans Poulsen','Musikproducer / rådgiver','11:00','18:30','Med sammen med Kim & Co. under orkesterøvelsen.']
+      ['KIM010B','Kim Hansen','Kapellmeistari','10:00','18:30','HANS-DAY. Vón 12:30–15:30 og Regin 15:30–18:30.'],
+      ['PAU010B','Pauli Reinert Poulsen','Tónleikari','10:00','18:30','HANS-DAY med Kim & Co.'],
+      ['JOH010B','Jóhannus á Rógvu Joensen','Tónleikari','10:00','18:30','HANS-DAY med Kim & Co.'],
+      ['VON010B','Vón','Spíri','12:30','15:30','HANS-DAY · træning med Kim & Co.'],
+      ['REG010B','Regin','Spíri','15:30','18:30','HANS-DAY · træning med Kim & Co.'],
+      ['HAN010B','Hans Poulsen','Musikproducer / rådgiver','11:00','18:30','HANS-DAY · med sammen med Kim & Co. under orkesterøvelsen.']
     ];
-    music10.forEach(([id,person,role,start,end,task])=>upsert({id,date:'2026-09-10',start,end,person,role,task,location:loc10,activity:'Orkesterøvelse · Kim & Co.',status:'Bekræftet'}));
+    music10.forEach(([id,person,role,start,end,task])=>upsert({id,date:'2026-09-10',start,end,person,role,task,location:loc10,activity:'HANS-DAY',status:'Bekræftet'}));
 
     const singLoc='Tórshavnar Musikkskúli, Landavegur 84, Tórshavn';
     const singBase={date:'2026-09-10',start:'11:00',end:'12:30',location:singLoc,activity:'Sangtræning + optagelse',status:'Bekræftet'};
@@ -88,22 +87,21 @@ exports.handler = async function(event, context) {
     upsert({...singBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Instruktør på fælles sangtræning.'});
     upsert({...singBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Fotograf',task:'Fotograf på fælles sangtræning.'});
 
-    // 11. september: orkesterøvelse med Jens, Vár og Helge.
+    // 11. september: JENS-DAY.
     const loc11='Gentukostdeildin, Hoydalar';
     const music11=[
-      ['KIM011B','Kim Hansen','Kapellmeistari','10:00','18:30','Orkesterøvelse. Vár 12:00–15:00 og Helge 15:00–18:30.'],
-      ['PAU011B','Pauli Reinert Poulsen','Tónleikari','10:00','18:30','Orkesterøvelse med Kim & Co.'],
-      ['JOH011B','Jóhannus á Rógvu Joensen','Tónleikari','10:00','18:30','Orkesterøvelse med Kim & Co.'],
-      ['VAR011B','Vár','Spíri','12:00','15:00','Træning med Kim & Co.'],
-      ['HEL011B','Helge','Spíri','15:00','18:30','Træning med Kim & Co.'],
-      ['JEN011B','Jens L. Thomsen','Musikproducer / rådgiver','10:00','18:30','Med sammen med Kim & Co. under orkesterøvelsen.']
+      ['KIM011B','Kim Hansen','Kapellmeistari','10:00','18:30','JENS-DAY. Vár 12:00–15:00 og Helge 15:00–18:30.'],
+      ['PAU011B','Pauli Reinert Poulsen','Tónleikari','10:00','18:30','JENS-DAY med Kim & Co.'],
+      ['JOH011B','Jóhannus á Rógvu Joensen','Tónleikari','10:00','18:30','JENS-DAY med Kim & Co.'],
+      ['VAR011B','Vár','Spíri','12:00','15:00','JENS-DAY · træning med Kim & Co.'],
+      ['HEL011B','Helge','Spíri','15:00','18:30','JENS-DAY · træning med Kim & Co.'],
+      ['JEN011B','Jens L. Thomsen','Musikproducer / rådgiver','10:00','18:30','JENS-DAY · med sammen med Kim & Co. under orkesterøvelsen.']
     ];
-    music11.forEach(([id,person,role,start,end,task])=>upsert({id,date:'2026-09-11',start,end,person,role,task,location:loc11,activity:'Orkesterøvelse · Kim & Co.',status:'Bekræftet'}));
+    music11.forEach(([id,person,role,start,end,task])=>upsert({id,date:'2026-09-11',start,end,person,role,task,location:loc11,activity:'JENS-DAY',status:'Bekræftet'}));
 
-    // 12. og 13. september: orkestret har fri. Ingen orkestervagter i portalen.
+    // 12. og 13. september: orkestret har fri.
     shifts = shifts.filter(x => !(x && ['2026-09-12','2026-09-13'].includes(x.date) && /orkester|musikøvelse|spíri træning/i.test(String(x.activity||'')+' '+String(x.task||''))));
 
-    // Bevar særlig fremtidig kamera-indkøring.
     upsert({id:'EYD024',date:'2026-09-24',start:'13:30',end:'23:00',person:'Eyðun Müller Thomsen',role:'Fotograf / kamera · indkøring',task:'Går med på kamera/foto under Del 4 for at lære funktionen til Del 5.',location:'Aulan, Hoydalar',activity:'Optagelse, del 4 · indkøring kamera',status:'Bekræftet'});
 
     shifts.forEach(x=>{
@@ -113,7 +111,7 @@ exports.handler = async function(event, context) {
       x.activity=fixNaina(x.activity);
     });
 
-    // Byg dagsvisningen for hele uge 37 direkte fra den aktuelle ugeplan.
+    // Dagsvisning for uge 37.
     program = program.filter(x => !(x && x.date >= '2026-09-08' && x.date <= '2026-09-13'));
 
     program.push({id:'WP-LIGHT-0908',date:'2026-09-08',dayType:'Forberedelse',part:'',start:'08:00',end:'16:00',activity:'Lysopsætning i Aulan',participants:'Hans Petur Hansen, Jónfinn Stenberg, Súni Joensen',responsible:'Teknisk hold',location:'Aulan, Hoydalar',status:'Bekræftet',notes:'Ingen orkestertræning og ingen frokost.'});
@@ -129,13 +127,13 @@ exports.handler = async function(event, context) {
     program.push({id:'WP-BEN-0909-3',date:'2026-09-09',dayType:'BENJAMIN-SUPER-DAG',part:'',start:'15:00',end:'18:00',activity:'Naina Jórun træner med Kim & Co. · Kenneth filmer',participants:'Naina Jórun, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Benjamin Djurhuus, Kenneth Jørgensen',responsible:'Kim Hansen / Benjamin Djurhuus',location:loc9,status:'Bekræftet',notes:''});
 
     program.push({id:'WP-GUD-0910',date:'2026-09-10',dayType:'Sangtræning + optagelse',part:'',start:'11:00',end:'12:30',activity:'Fælles sangtræning med Guðrun Sólja · optagelse',participants:'Guðrun Sólja Jacobsen, Regin, Vón, Naina Jórun, Maria Winther Olsen, Jónfinn Stenberg',responsible:'Guðrun Sólja Jacobsen / Maria Winther Olsen / Jónfinn Stenberg',location:singLoc,status:'Bekræftet',notes:''});
-    program.push({id:'WP-MUS-0910-1',date:'2026-09-10',dayType:'Orkesterøvelse',part:'',start:'10:00',end:'12:30',activity:'Kim & Co. øver',participants:'Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Hans Poulsen',responsible:'Kim Hansen',location:loc10,status:'Bekræftet',notes:'Ingen orkesterfrokost planlagt.'});
-    program.push({id:'WP-MUS-0910-2',date:'2026-09-10',dayType:'Orkesterøvelse',part:'',start:'12:30',end:'15:30',activity:'Vón træner med Kim & Co.',participants:'Vón, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Hans Poulsen',responsible:'Kim Hansen / Hans Poulsen',location:loc10,status:'Bekræftet',notes:''});
-    program.push({id:'WP-MUS-0910-3',date:'2026-09-10',dayType:'Orkesterøvelse',part:'',start:'15:30',end:'18:30',activity:'Regin træner med Kim & Co.',participants:'Regin, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Hans Poulsen',responsible:'Kim Hansen / Hans Poulsen',location:loc10,status:'Bekræftet',notes:''});
+    program.push({id:'WP-MUS-0910-1',date:'2026-09-10',dayType:'HANS-DAY',part:'',start:'10:00',end:'12:30',activity:'HANS-DAY · Kim & Co. øver',participants:'Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Hans Poulsen',responsible:'Kim Hansen / Hans Poulsen',location:loc10,status:'Bekræftet',notes:'Ingen orkesterfrokost planlagt.'});
+    program.push({id:'WP-MUS-0910-2',date:'2026-09-10',dayType:'HANS-DAY',part:'',start:'12:30',end:'15:30',activity:'HANS-DAY · Vón træner med Kim & Co.',participants:'Vón, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Hans Poulsen',responsible:'Kim Hansen / Hans Poulsen',location:loc10,status:'Bekræftet',notes:''});
+    program.push({id:'WP-MUS-0910-3',date:'2026-09-10',dayType:'HANS-DAY',part:'',start:'15:30',end:'18:30',activity:'HANS-DAY · Regin træner med Kim & Co.',participants:'Regin, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Hans Poulsen',responsible:'Kim Hansen / Hans Poulsen',location:loc10,status:'Bekræftet',notes:''});
 
-    program.push({id:'WP-MUS-0911-1',date:'2026-09-11',dayType:'Orkesterøvelse',part:'',start:'10:00',end:'12:00',activity:'Kim & Co. øver',participants:'Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen',location:loc11,status:'Bekræftet',notes:'Ingen orkesterfrokost planlagt.'});
-    program.push({id:'WP-MUS-0911-2',date:'2026-09-11',dayType:'Orkesterøvelse',part:'',start:'12:00',end:'15:00',activity:'Vár træner med Kim & Co.',participants:'Vár, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',location:loc11,status:'Bekræftet',notes:''});
-    program.push({id:'WP-MUS-0911-3',date:'2026-09-11',dayType:'Orkesterøvelse',part:'',start:'15:00',end:'18:30',activity:'Helge træner med Kim & Co.',participants:'Helge, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',location:loc11,status:'Bekræftet',notes:''});
+    program.push({id:'WP-MUS-0911-1',date:'2026-09-11',dayType:'JENS-DAY',part:'',start:'10:00',end:'12:00',activity:'JENS-DAY · Kim & Co. øver',participants:'Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',location:loc11,status:'Bekræftet',notes:'Ingen orkesterfrokost planlagt.'});
+    program.push({id:'WP-MUS-0911-2',date:'2026-09-11',dayType:'JENS-DAY',part:'',start:'12:00',end:'15:00',activity:'JENS-DAY · Vár træner med Kim & Co.',participants:'Vár, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',location:loc11,status:'Bekræftet',notes:''});
+    program.push({id:'WP-MUS-0911-3',date:'2026-09-11',dayType:'JENS-DAY',part:'',start:'15:00',end:'18:30',activity:'JENS-DAY · Helge træner med Kim & Co.',participants:'Helge, Kim Hansen, Pauli Reinert Poulsen, Jóhannus á Rógvu Joensen, Jens L. Thomsen',responsible:'Kim Hansen / Jens L. Thomsen',location:loc11,status:'Bekræftet',notes:''});
 
     program.forEach(x=>{
       if (!x) return;
@@ -145,7 +143,6 @@ exports.handler = async function(event, context) {
       x.notes=fixNaina(x.notes);
     });
 
-    // Skjul afsluttede vagter/events i færøsk tid.
     const p=Object.fromEntries(new Intl.DateTimeFormat('sv-SE',{
       timeZone:'Atlantic/Faroe',year:'numeric',month:'2-digit',day:'2-digit',
       hour:'2-digit',minute:'2-digit',hourCycle:'h23'
