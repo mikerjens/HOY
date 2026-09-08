@@ -66,8 +66,10 @@ exports.handler = async function(event, context) {
     upsert({id:'JON009LUNCH',date:'2026-09-09',start:'11:00',end:'12:00',person:'Jonna Fritsdóttir Mortensen',role:'Catering / madansvarlig',task:'Sørger for let orkesterfrokost til Kim Hansen, Pauli Reinert Poulsen og Jóhannus á Rógvu Joensen.',location:loc9,activity:'BENJAMIN-SUPER-DAG · Orkesterfrokost',status:'Bekræftet'});
     upsert({id:'KEN009FILM',date:'2026-09-09',start:'12:00',end:'18:00',person:'Kenneth Jørgensen',role:'Fotograf',task:'Film Tórfríð 12:00–15:00. Film derefter Naina Jórun 15:00–18:00. Ved spørgsmål: kontakt Michael Koba.',location:loc9,activity:'BENJAMIN-SUPER-DAG · filmoptagelse',status:'Bekræftet'});
 
-    // 10. september: HANS-DAY + sangsession.
+    // 10. september: HANS-DAY + sangsession. Fjern gamle generiske orkestervagter først.
     const loc10='Gentukostdeildin, Hoydalar';
+    const hansPeople=new Set(['Kim Hansen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Vón','Regin','Hans Poulsen']);
+    shifts=shifts.filter(x=>!(x&&x.date==='2026-09-10'&&/Gentukostdeildin/i.test(String(x.location||''))&&hansPeople.has(fixVar(fixNaina(x.person)))));
     const music10=[
       ['KIM010B','Kim Hansen','Kapellmeistari','10:00','18:30','HANS-DAY. Vón 12:30–15:30 og Regin 15:30–18:30.'],
       ['PAU010B','Pauli Reinert Poulsen','Tónleikari','10:00','18:30','HANS-DAY med Kim & Co.'],
@@ -87,8 +89,10 @@ exports.handler = async function(event, context) {
     upsert({...singBase,id:'MAR010FILM',person:'Maria Winther Olsen',role:'Instruktør / tilrettelægger',task:'Instruktør på fælles sangtræning.'});
     upsert({...singBase,id:'JON010FILM',person:'Jónfinn Stenberg',role:'Fotograf',task:'Fotograf på fælles sangtræning.'});
 
-    // 11. september: JENS-DAY.
+    // 11. september: JENS-DAY. Fjern gamle generiske orkestervagter først.
     const loc11='Gentukostdeildin, Hoydalar';
+    const jensPeople=new Set(['Kim Hansen','Pauli Reinert Poulsen','Jóhannus á Rógvu Joensen','Vár','Vár Isaksen','Helge','Jens L. Thomsen']);
+    shifts=shifts.filter(x=>!(x&&x.date==='2026-09-11'&&/Gentukostdeildin/i.test(String(x.location||''))&&jensPeople.has(fixVar(fixNaina(x.person)))));
     const music11=[
       ['KIM011B','Kim Hansen','Kapellmeistari','10:00','18:30','JENS-DAY. Vár 12:00–15:00 og Helge 15:00–18:30.'],
       ['PAU011B','Pauli Reinert Poulsen','Tónleikari','10:00','18:30','JENS-DAY med Kim & Co.'],
