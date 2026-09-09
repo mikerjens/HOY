@@ -1,8 +1,10 @@
 (() => {
   function decorateCreditMessages() {
     document.querySelectorAll('.message-card').forEach(card => {
-      const title = String(card.querySelector('.message-title')?.textContent || '').toLocaleLowerCase('da-DK');
-      if (!title.includes('credit')) return;
+      const title = String(card.querySelector('.message-title')?.textContent || '').toLocaleLowerCase('fo-FO');
+      const body = String(card.querySelector('.message-text')?.textContent || '').toLocaleLowerCase('fo-FO');
+      const isCreditMessage = title.includes('credit') || title.includes('kanna tína funktión') || body.includes('credits');
+      if (!isCreditMessage) return;
       if (card.querySelector('.credit-message-button')) return;
 
       const button = document.createElement('button');
