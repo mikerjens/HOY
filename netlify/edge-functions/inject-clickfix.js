@@ -6,7 +6,7 @@ export default async (request, context) => {
   let html = await response.text();
   html = html.replace(/<script src="\/clickfix\.js\?v=[^"]+"><\/script>/g, '');
   html = html.replace('</head>', '<style>.mine-note{display:none!important}</style></head>');
-  html = html.replace('</body>', '<script src="/clickfix.js?v=20260909-creditflow"></script></body>');
+  html = html.replace('</body>', '<script src="/clickfix.js?v=20260909-portalfix"></script></body>');
 
   const headers = new Headers(response.headers);
   headers.delete('content-length');
