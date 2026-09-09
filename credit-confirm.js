@@ -21,7 +21,7 @@
     const notice = document.querySelector('#creditBox .notice');
     if (!notice || notice.dataset.confirmText === '1') return;
     notice.dataset.confirmText = '1';
-    notice.innerHTML = 'Kanna, um navn og funktión hjá tær eru røtt. Er alt rætt, trýst á <strong>GÓÐKENN NAVN OG FUNKTIÓN</strong>. Um okkurt skal broytast, trýst á <strong>Foreslå ændring</strong>.<br><span class="deadline">Freistin er mánadagin 28. september 2026.</span>';
+    notice.innerHTML = 'Kanna, um navn og funktión hjá tær eru røtt. Er alt rætt, trýst á <strong>GODKEND NAVN OG FUNKTION</strong>. Um okkurt skal broytast, trýst á <strong>Foreslå ændring</strong>.<br><span class="deadline">Freistin er mánadagin 28. september 2026.</span>';
   }
 
   async function confirmCredit(button) {
@@ -29,7 +29,7 @@
     if (!c || !c.name) return;
     const oldText = button.textContent;
     button.disabled = true;
-    button.textContent = 'SENDIR…';
+    button.textContent = 'SENDER…';
     try {
       const body = new URLSearchParams();
       body.set('form-name', 'credit-feedback');
@@ -45,7 +45,7 @@
         body: body.toString()
       });
       if (!response.ok) throw new Error('Kunne ikke sende bekræftelse');
-      button.textContent = 'GÓÐKENT';
+      button.textContent = 'GODKENDT';
       button.classList.add('confirmed');
       const box = document.getElementById('creditBox');
       if (box && !document.getElementById('creditConfirmNote')) {
@@ -77,7 +77,7 @@
     button.id = 'confirmCreditBtn';
     button.className = 'credit-confirm-btn';
     const alreadyConfirmed = String(c.status || '').toLocaleLowerCase('da-DK').includes('bekræftet af bruger');
-    button.textContent = alreadyConfirmed ? 'GÓÐKENT' : 'GÓÐKENN NAVN OG FUNKTIÓN';
+    button.textContent = alreadyConfirmed ? 'GODKENDT' : 'GODKEND NAVN OG FUNKTION';
     if (alreadyConfirmed) {
       button.disabled = true;
       button.classList.add('confirmed');
