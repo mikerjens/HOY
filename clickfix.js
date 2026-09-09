@@ -117,6 +117,7 @@
       .desktop-nav .credit-nav-button{color:#17233d}
       .desktop-nav .credit-nav-button:hover{background:#f8fafc}
       .more-link.credit-more-link{--nav-color:#b1124d}
+      @media(min-width:760px){.desktop-nav{transition:margin-top .16s ease}body.credit-cta-open .desktop-nav{margin-top:118px}}
       @media(max-width:759px){.name-wrap:has(.credit-name-cta.show){padding-bottom:8px}.credit-name-cta{border-radius:999px;padding:9px 12px;font-size:10px}}
     `;
     document.head.appendChild(style);
@@ -134,8 +135,10 @@
     const cta = document.getElementById('creditNameCta');
     if (!select || !cta) return;
     const name = String(select.value || '').trim();
-    cta.classList.toggle('show', Boolean(name));
-    cta.setAttribute('aria-hidden', name ? 'false' : 'true');
+    const visible = Boolean(name);
+    cta.classList.toggle('show', visible);
+    cta.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    document.body.classList.toggle('credit-cta-open', visible);
     if (name) {
       const html = `SE DIT FORSLAG TIL CREDITS<small>${name}</small>`;
       if (cta.innerHTML !== html) cta.innerHTML = html;
