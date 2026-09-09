@@ -8,7 +8,7 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'credit-message-button';
-      button.textContent = 'SE DINE CREDITS';
+      button.textContent = 'TÍTT CREDIT';
       button.addEventListener('click', () => {
         location.href = '/credit.html';
       });
