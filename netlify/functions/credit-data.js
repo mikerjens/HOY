@@ -1,6 +1,7 @@
 const SHEET_ID_ENV = 'CREDIT_SHEET_ID';
 const CREDIT_RANGE = 'A4:I160';
 
+// Rebuild marker: CREDIT_SHEET_ID was added to Netlify production on 2026-09-09.
 function parseCsv(text) {
   const rows = [];
   let row = [], value = '', quoted = false;
