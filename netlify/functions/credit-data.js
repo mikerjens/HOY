@@ -1,4 +1,4 @@
-const SHEET_ID_ENV = 'MASTER_SHEET_ID';
+const SHEET_ID_ENV = 'CREDIT_SHEET_ID';
 const CREDIT_RANGE = 'A4:I160';
 
 function parseCsv(text) {
@@ -43,7 +43,7 @@ function json(statusCode, body) {
 exports.handler = async function(event) {
   try {
     const sheetId = process.env[SHEET_ID_ENV];
-    if (!sheetId) throw new Error('MASTER_SHEET_ID mangler i Netlify.');
+    if (!sheetId) throw new Error('CREDIT_SHEET_ID mangler i Netlify.');
 
     const name = String(event.queryStringParameters?.name || '').trim();
     if (!name) return json(400, {error: 'Navn mangler.'});
