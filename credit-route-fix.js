@@ -5,7 +5,13 @@
     const nav = document.querySelector('.desktop-nav');
     if (!nav) return;
 
-    nav.querySelectorAll('.credit-nav-hardlink').forEach(el => el.remove());
+    nav.querySelectorAll('.credit-nav-button').forEach(el => el.remove());
+    const existing = [...nav.querySelectorAll('.credit-nav-hardlink')];
+    if (existing.length) {
+      existing.slice(1).forEach(el => el.remove());
+      existing[0].href = CREDIT_PATH;
+      return;
+    }
 
     const link = document.createElement('a');
     link.href = CREDIT_PATH;
@@ -20,7 +26,13 @@
     const sheet = document.querySelector('.more-sheet');
     if (!sheet) return;
 
-    sheet.querySelectorAll('.credit-more-hardlink').forEach(el => el.remove());
+    sheet.querySelectorAll('.credit-more-link').forEach(el => el.remove());
+    const existing = [...sheet.querySelectorAll('.credit-more-hardlink')];
+    if (existing.length) {
+      existing.slice(1).forEach(el => el.remove());
+      existing[0].href = CREDIT_PATH;
+      return;
+    }
 
     const link = document.createElement('a');
     link.href = CREDIT_PATH;
@@ -62,10 +74,10 @@
     style.textContent = `
       .credit-nav-button{display:none!important}
       .credit-more-link{display:none!important}
-      .credit-nav-hardlink{min-height:48px;padding:12px 14px;border-radius:13px;font-weight:850;display:flex;align-items:center;gap:11px;color:#17233d;text-decoration:none}
+      .credit-nav-hardlink{min-height:48px;padding:12px 14px;border-radius:13px;font-weight:850;display:flex;align-items:center;gap:11px;color:#17233d;text-decoration:none;cursor:pointer}
       .credit-nav-hardlink:hover{background:#f8fafc}
       .credit-nav-hardicon{width:21px;height:21px;display:grid;place-items:center;font-size:18px;line-height:1;color:#b1124d}
-      .credit-more-hardlink{text-decoration:none;color:#17233d}
+      .credit-more-hardlink{text-decoration:none;color:#17233d;cursor:pointer}
     `;
     document.head.appendChild(style);
   }
