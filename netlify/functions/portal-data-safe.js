@@ -76,7 +76,10 @@ function safePerson(name, role, id = '') {
   const n = String(name || '').trim();
   const r = String(role || '').trim();
   if (!n || /^stjerne\b/i.test(n) || /stjerne/i.test(r)) return '';
-  if (r.toLocaleLowerCase('fo-FO') === 'spíri') return n.split(/\s+/)[0] || n;
+  if (r.toLocaleLowerCase('fo-FO') === 'spíri') {
+    if (n.toLocaleLowerCase('fo-FO') === 'naina jórun') return 'Naina Jórun';
+    return n.split(/\s+/)[0] || n;
+  }
   return n;
 }
 
