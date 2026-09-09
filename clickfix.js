@@ -105,6 +105,84 @@
     }
   }
 
+  function ensureCreditStyles() {
+    if (document.getElementById('hoy-credit-flow-style')) return;
+    const style = document.createElement('style');
+    style.id = 'hoy-credit-flow-style';
+    style.textContent = `
+      .credit-name-cta{display:none;width:100%;margin-top:8px;border:0;border-radius:12px;padding:10px 11px;background:linear-gradient(100deg,#b1124d,#df4b7d);color:#fff;font-size:11px;font-weight:950;line-height:1.25;text-align:center;box-shadow:0 8px 18px rgba(177,18,77,.16)}
+      .credit-name-cta.show{display:block}
+      .credit-name-cta small{display:block;font-size:9px;font-weight:750;opacity:.9;margin-top:3px}
+      .credit-nav-icon{width:21px;height:21px;display:grid;place-items:center;font-size:18px;line-height:1;color:#b1124d}
+      .desktop-nav .credit-nav-button{color:#17233d}
+      .desktop-nav .credit-nav-button:hover{background:#f8fafc}
+      .more-link.credit-more-link{--nav-color:#b1124d}
+      @media(max-width:759px){.name-wrap:has(.credit-name-cta.show){padding-bottom:8px}.credit-name-cta{border-radius:999px;padding:9px 12px;font-size:10px}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function goCreditWithName() {
+    const select = document.getElementById('nameSelect');
+    const name = String(select?.value || '').trim();
+    if (!name) return;
+    location.href = `/credit.html?name=${encodeURIComponent(name)}&from=name`;
+  }
+
+  function updateCreditCta() {
+    const select = document.getElementById('nameSelect');
+    const cta = document.getElementById('creditNameCta');
+    if (!select || !cta) return;
+    const name = String(select.value || '').trim();
+    cta.classList.toggle('show', Boolean(name));
+    cta.setAttribute('aria-hidden', name ? 'false' : 'true');
+    if (name) {
+      cta.innerHTML = `SE DIT FORSLAG TIL CREDITS<small>${name}</small>`;
+    }
+  }
+
+  function ensureCreditFlow() {
+    if (location.pathname !== '/' && location.pathname !== '/index.html') return;
+    ensureCreditStyles();
+
+    const nameWrap = document.querySelector('.name-wrap');
+    const select = document.getElementById('nameSelect');
+    if (nameWrap && select && !document.getElementById('creditNameCta')) {
+      const cta = document.createElement('button');
+      cta.type = 'button';
+      cta.id = 'creditNameCta';
+      cta.className = 'credit-name-cta';
+      cta.setAttribute('aria-hidden','true');
+      cta.addEventListener('click', goCreditWithName);
+      nameWrap.appendChild(cta);
+      select.addEventListener('change', () => requestAnimationFrame(updateCreditCta));
+    }
+
+    const desktopNav = document.querySelector('.desktop-nav');
+    if (desktopNav && !desktopNav.querySelector('.credit-nav-button')) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'credit-nav-button';
+      button.innerHTML = '<span class="credit-nav-icon">◌</span><span>CREDITS</span>';
+      button.addEventListener('click', () => { location.href = '/credit.html'; });
+      const contact = [...desktopNav.children].find(x => x.dataset?.page === 'contact');
+      desktopNav.insertBefore(button, contact || null);
+    }
+
+    const moreSheet = document.querySelector('.more-sheet');
+    if (moreSheet && !moreSheet.querySelector('.credit-more-link')) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'more-link credit-more-link';
+      button.innerHTML = '<span class="credit-nav-icon">◌</span><div>CREDITS<small>Se og kontrollér dit forslag til rulletekst</small></div><span>›</span>';
+      button.addEventListener('click', () => { location.href = '/credit.html'; });
+      const contact = [...moreSheet.querySelectorAll('.more-link')].find(x => x.dataset?.page === 'contact');
+      moreSheet.insertBefore(button, contact || null);
+    }
+
+    updateCreditCta();
+  }
+
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const row = findRow(e.target);
@@ -132,8 +210,10 @@
   const observer = new MutationObserver(() => {
     prepareRows();
     decorateMessages();
+    ensureCreditFlow();
   });
   observer.observe(document.documentElement, {subtree:true, childList:true});
   prepareRows();
   decorateMessages();
+  ensureCreditFlow();
 })();
