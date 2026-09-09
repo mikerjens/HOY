@@ -54,7 +54,17 @@ function publicText(value) {
     .trim();
 }
 
-function safePerson(name, role) {
+const STAR_BY_ID = {
+  V052: 'Stjørna 1',
+  V126: 'Stjørna 2',
+  V174: 'Stjørna 3',
+  V228: 'Stjørna 4',
+  V290: 'Stjørna 5'
+};
+
+function safePerson(name, role, id = '') {
+  const forcedStar = STAR_BY_ID[String(id || '').trim()];
+  if (forcedStar) return forcedStar;
   const n = String(name || '').trim();
   const r = String(role || '').trim();
   if (!n || /^stjerne\b/i.test(n) || /stjerne/i.test(r)) return '';
@@ -92,29 +102,33 @@ exports.handler = async function() {
     const sheetId = process.env.MASTER_SHEET_ID;
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler i Netlify.');
 
-    const [shiftRows, programRows] = await Promise.all([
+    const starRanges = ['A88:J88','A162:J162','A210:J210','A264:J264','A326:J326'];
+    const [shiftRows, programRows, starBlocks] = await Promise.all([
       fetchCsv(sheetId, 'VAGTPLAN', 'A5:J1040'),
-      fetchCsv(sheetId, 'DAGSPROGRAM', 'A5:L200').catch(() => [])
+      fetchCsv(sheetId, 'DAGSPROGRAM', 'A5:L200').catch(() => []),
+      Promise.all(starRanges.map(range => fetchCsv(sheetId, 'VAGTPLAN', range).catch(() => [])))
     ]);
+    const starRows = starBlocks.flat();
 
     const {today, now} = faroeNow();
     const active = x => x && x.date && (x.date > today || (x.date === today && (!x.end || String(x.end) > now)));
 
     const byId = new Map();
-    for (const r of shiftRows) {
+    for (const r of [...shiftRows, ...starRows]) {
       const id = String(r[0] || '').trim();
       if (!id || id === 'Vagt ID') continue;
       byId.set(id, r);
     }
 
     const shifts = [...byId.values()].map(r => {
+      const id = String(r[0] || '').trim();
       const role = publicText(r[5]);
       return {
-        id:String(r[0] || '').trim(),
+        id,
         date:normalizeDate(r[1]),
         start:normalizeTime(r[2]),
         end:normalizeTime(r[3]),
-        person:safePerson(r[4], role),
+        person:safePerson(r[4], role, id),
         role,
         task:publicText(r[6]),
         location:publicText(r[7]),
@@ -147,7 +161,7 @@ exports.handler = async function() {
     return {
       statusCode:200,
       headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0'},
-      body:JSON.stringify({updatedAt:new Date().toISOString(),today,people,shifts,program,rescueMode:true})
+      body:JSON.stringify({updatedAt:new Date().toISOString(),today,people,shifts,program,rescueMode:true,starsGuaranteed:true})
     };
   } catch (error) {
     return {
