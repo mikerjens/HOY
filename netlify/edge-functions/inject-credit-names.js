@@ -7,7 +7,7 @@ export default async (request, context) => {
   html = html.replace(/<script src="\/credit-names\.js\?v=[^"]+"><\/script>/g, '');
   html = html.replace(/<script src="\/credit-confirm\.js\?v=[^"]+"><\/script>/g, '');
   html = html.replace(/<script src="\/credit-realtime\.js\?v=[^"]+"><\/script>/g, '');
-  html = html.replace('</body>', '<script src="/credit-names.js?v=20260909-rulletekst-names"></script><script src="/credit-realtime.js?v=20260909-realtime-1"></script><script src="/credit-confirm.js?v=20260909-confirm-realtime-1"></script></body>');
+  html = html.replace('</body>', '<script src="/credit-names.js?v=20260909-rulletekst-names"></script><script src="/credit-confirm.js?v=20260909-confirm-hourly-1"></script></body>');
 
   const headers = new Headers(response.headers);
   headers.delete('content-length');
