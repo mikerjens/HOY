@@ -37,7 +37,7 @@
 </form></div></div>
 
 <script>
-const CREDIT_SHEET='1liibQb_gMQqGknF-pAvCQEnVF8aFRloIBaU9pyykhck';
+const CREDIT_SHEET='1uD5fjFA4GW6bYtYaxCgaGB0h-FVBbp8p3ialzJpOhyY';
 const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function parseCsv(text){const rows=[];let row=[],v='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&q&&n==='"'){v+='"';i++;continue}if(c==='"'){q=!q;continue}if(c===','&&!q){row.push(v);v='';continue}if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(v);v='';if(row.some(x=>String(x).trim()!==''))rows.push(row);row=[];continue}v+=c}if(v||row.length){row.push(v);if(row.some(x=>String(x).trim()!==''))rows.push(row)}return rows}
 function selectedName(){const qp=new URLSearchParams(location.search).get('name');return String(qp||localStorage.getItem('hoydalarName')||'').trim()}
