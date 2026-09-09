@@ -98,8 +98,8 @@
     }
     const box = document.getElementById('homeMessages');
     if (!box) return;
-    let heading = box.previousElementSibling;
-    if (heading?.classList?.contains('section-title')) {
+    const heading = box.previousElementSibling;
+    if (heading?.classList?.contains('section-title') && heading.textContent !== 'MESSAGES') {
       heading.textContent = 'MESSAGES';
       heading.classList.add('messages-heading');
     }
@@ -137,7 +137,8 @@
     cta.classList.toggle('show', Boolean(name));
     cta.setAttribute('aria-hidden', name ? 'false' : 'true');
     if (name) {
-      cta.innerHTML = `SE DIT FORSLAG TIL CREDITS<small>${name}</small>`;
+      const html = `SE DIT FORSLAG TIL CREDITS<small>${name}</small>`;
+      if (cta.innerHTML !== html) cta.innerHTML = html;
     }
   }
 
