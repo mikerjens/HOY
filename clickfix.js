@@ -1,11 +1,32 @@
 (() => {
   const selector = '#mineContent .mine-next, #mineContent .mine-row';
+  const STAR_NAMES = ['Stjørna 1','Stjørna 2','Stjørna 3','Stjørna 4','Stjørna 5'];
   let touchStart = null;
   let lastOpen = 0;
   const messageLoadingStarted = Date.now();
   const MESSAGE_LOADING_MAX_MS = 6000;
   let suppressedEmptyMessagesHtml = '';
   let messagesResolved = false;
+
+  function ensureStarOptions() {
+    const select = document.getElementById('nameSelect');
+    if (!select) return;
+    const selected = select.value;
+    const existing = new Set([...select.options].map(o => String(o.value || o.textContent || '').trim()));
+    let changed = false;
+    for (const name of STAR_NAMES) {
+      if (existing.has(name)) continue;
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      const candidates = [...select.options].slice(1);
+      const before = candidates.find(o => String(o.textContent || '').localeCompare(name, 'da') > 0);
+      select.insertBefore(option, before || null);
+      existing.add(name);
+      changed = true;
+    }
+    if (changed && selected && [...select.options].some(o => o.value === selected)) select.value = selected;
+  }
 
   function resolveShiftDate(row) {
     const dateBox = row.querySelector('.mine-date');
@@ -126,7 +147,7 @@
         #homeMessages .home-message{background:linear-gradient(135deg,#fff0f5 0%,#fff8fb 58%,#fff3e8 100%);border:1px solid #efc8d7;padding:15px 44px 15px 52px;box-shadow:0 10px 26px rgba(177,18,77,.10)}
         #homeMessages .home-message:before{content:'✉';position:absolute;left:15px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:999px;background:#b1124d;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:900}
         #homeMessages .home-message strong{color:#7e123d}
-        #homeMessages .home-message small{color:#775565}
+        #homeMessages .home-message small{color:#775565;font-weight:800}
         #homeMessages .hoy-message-loading{pointer-events:none}
         #homeMessages .hoy-message-loading:after{display:none!important}
         #home .messages-heading{display:flex;align-items:center;gap:8px;color:#a7154a}
@@ -251,11 +272,13 @@
   }
 
   const observer = new MutationObserver(() => {
+    ensureStarOptions();
     prepareRows();
     decorateMessages();
     ensureCreditFlow();
   });
   observer.observe(document.documentElement, {subtree:true, childList:true});
+  ensureStarOptions();
   prepareRows();
   decorateMessages();
   ensureCreditFlow();
