@@ -37,6 +37,14 @@ function normalizeDate(value) {
   m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) return `${m[3]}-${String(Number(m[2])).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const months = {jan:1,feb:2,mar:3,apr:4,maj:5,jun:6,jul:7,aug:8,sep:9,okt:10,nov:11,dec:12};
+  m = raw.toLocaleLowerCase('da-DK').match(/(?:^[a-zæøå]+\.\s*)?(\d{1,2})\.\s*(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\.?\s*(\d{4})$/i);
+  if (m) {
+    const month = months[m[2].toLowerCase()];
+    return `${m[3]}-${String(month).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
+  }
+
   return raw;
 }
 
