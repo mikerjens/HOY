@@ -1,5 +1,5 @@
 const SHEET_ID_ENV = 'CREDIT_SHEET_ID';
-const CREDIT_RANGE = 'A4:I160';
+const CREDIT_RANGE = 'A4:K160';
 
 // Rebuild marker: CREDIT_SHEET_ID was added to Netlify production on 2026-09-09.
 function parseCsv(text) {
@@ -63,7 +63,10 @@ exports.handler = async function(event) {
     let rows = parseCsv(await response.text());
     if (rows[0] && String(rows[0][0]).trim() === 'Rækkefølge') rows = rows.slice(1);
 
-    const hit = rows.find(row => normalize(row[2]) === normalize(name));
+    // Match both the current approved name (C) and the preserved original name (J).
+    // This means an old/bookmarked portal link still resolves after a producer-approved name change.
+    const wanted = normalize(name);
+    const hit = rows.find(row => normalize(row[2]) === wanted || normalize(row[9]) === wanted);
     if (!hit) return json(200, {credit: null, name});
 
     const credit = {
@@ -77,7 +80,9 @@ exports.handler = async function(event) {
       control: String(hit[7] || '').trim(),
       note: String(hit[8] || '').trim()
     };
-    credit.status = credit.include || credit.control || 'Til kontrol';
+
+    // Portal workflow status lives in Kontrol. Include is only a fallback.
+    credit.status = credit.control || credit.include || 'Til kontrol';
 
     return json(200, {credit});
   } catch (error) {
