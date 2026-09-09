@@ -2,6 +2,10 @@
   const selector = '#mineContent .mine-next, #mineContent .mine-row';
   let touchStart = null;
   let lastOpen = 0;
+  const messageLoadingStarted = Date.now();
+  const MESSAGE_LOADING_MAX_MS = 6000;
+  let suppressedEmptyMessagesHtml = '';
+  let messagesResolved = false;
 
   function resolveShiftDate(row) {
     const dateBox = row.querySelector('.mine-date');
@@ -81,6 +85,38 @@
     });
   }
 
+  function guardMessageLoading() {
+    const box = document.getElementById('homeMessages');
+    if (!box || messagesResolved) return;
+
+    const text = String(box.textContent || '').trim().toLocaleLowerCase('da-DK');
+    const hasRealMessage = [...box.querySelectorAll('.home-message')].some(el => {
+      if (el.classList.contains('hoy-message-loading')) return false;
+      return !String(el.textContent || '').toLocaleLowerCase('da-DK').includes('ingen nye beskeder');
+    });
+
+    if (hasRealMessage) {
+      messagesResolved = true;
+      return;
+    }
+
+    const elapsed = Date.now() - messageLoadingStarted;
+    const isPrematureEmptyState = text.includes('ingen nye beskeder');
+
+    if (isPrematureEmptyState && elapsed < MESSAGE_LOADING_MAX_MS) {
+      if (!suppressedEmptyMessagesHtml) suppressedEmptyMessagesHtml = box.innerHTML;
+      if (!box.querySelector('.hoy-message-loading')) {
+        box.innerHTML = '<div class="home-message hoy-message-loading"><strong>Indlæser beskeder…</strong><small>Et øjeblik</small></div>';
+      }
+      return;
+    }
+
+    if (elapsed >= MESSAGE_LOADING_MAX_MS && box.querySelector('.hoy-message-loading')) {
+      box.innerHTML = suppressedEmptyMessagesHtml || '<div class="home-message"><strong>Ingen nye beskeder</strong><small>Vigtige ændringer vises her</small></div>';
+      messagesResolved = true;
+    }
+  }
+
   function decorateMessages() {
     if (!document.getElementById('hoy-message-style')) {
       const style = document.createElement('style');
@@ -91,6 +127,8 @@
         #homeMessages .home-message:before{content:'✉';position:absolute;left:15px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:999px;background:#b1124d;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:900}
         #homeMessages .home-message strong{color:#7e123d}
         #homeMessages .home-message small{color:#775565}
+        #homeMessages .hoy-message-loading{pointer-events:none}
+        #homeMessages .hoy-message-loading:after{display:none!important}
         #home .messages-heading{display:flex;align-items:center;gap:8px;color:#a7154a}
         #home .messages-heading:before{content:'✉';width:23px;height:23px;border-radius:999px;background:#b1124d;color:#fff;display:inline-grid;place-items:center;font-size:12px}
       `;
@@ -103,6 +141,7 @@
       heading.textContent = 'MESSAGES';
       heading.classList.add('messages-heading');
     }
+    guardMessageLoading();
   }
 
   function ensureCreditStyles() {
@@ -220,4 +259,5 @@
   prepareRows();
   decorateMessages();
   ensureCreditFlow();
+  setTimeout(guardMessageLoading, MESSAGE_LOADING_MAX_MS + 50);
 })();
