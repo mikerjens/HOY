@@ -1,6 +1,11 @@
 (() => {
   const CONFIRM_MARKER = '__CONFIRMED__';
 
+  function makeEventId() {
+    if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+    return `credit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+
   function ensureStyles() {
     if (document.getElementById('credit-confirm-style')) return;
     const style = document.createElement('style');
@@ -31,6 +36,7 @@
     button.disabled = true;
     button.textContent = 'SENDER…';
     try {
+      const eventId = makeEventId();
       const body = new URLSearchParams();
       body.set('form-name', 'credit-feedback');
       body.set('person', c.name);
@@ -39,11 +45,32 @@
       body.set('current_role', c.role || '');
       body.set('proposed_role', c.role || '');
       body.set('comment', CONFIRM_MARKER);
+      body.set('client_event_id', eventId);
+
+      const realtimePromise = fetch('/credit-realtime', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          event_type: 'confirm',
+          client_event_id: eventId,
+          submitted_at: new Date().toISOString(),
+          person: c.name,
+          current_name: c.name,
+          proposed_name: c.name,
+          current_role: c.role || '',
+          proposed_role: c.role || '',
+          comment: CONFIRM_MARKER
+        }),
+        keepalive: true
+      }).catch(() => null);
+
       const response = await fetch('/', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: body.toString()
       });
+      await realtimePromise;
+
       if (!response.ok) throw new Error('Kunne ikke sende bekræftelse');
       button.textContent = 'GODKENDT';
       button.classList.add('confirmed');
