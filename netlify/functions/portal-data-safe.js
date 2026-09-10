@@ -33,7 +33,13 @@ function normalizeDate(value) {
     }
   }
   let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${String(Number(m[1])).padStart(2,'0')}-${String(Number(m[2])).padStart(2,'0')}`;
+  if (m) {
+    const a = Number(m[1]), b = Number(m[2]);
+    let month = a, day = b;
+    if (a > 12) { day = a; month = b; }
+    else if (b > 12) { month = a; day = b; }
+    return `${m[3]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
   m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) return `${m[3]}-${String(Number(m[2])).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
@@ -44,43 +50,61 @@ function normalizeDate(value) {
     const month = months[m[2].toLowerCase()];
     return `${m[3]}-${String(month).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
   }
-
-  return raw;
+  return '';
 }
 
 function normalizeTime(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
-  const m = raw.match(/^(\d{1,2}):(\d{2})/);
-  return m ? `${String(Number(m[1])).padStart(2,'0')}:${m[2]}` : raw;
+  let m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (m) {
+    let h = Number(m[1]);
+    if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    return `${String(h).padStart(2,'0')}:${m[2]}`;
+  }
+  m = raw.match(/^(\d{1,2}):(\d{2})/);
+  return m ? `${String(Number(m[1])).padStart(2,'0')}:${m[2]}` : '';
 }
 
 function publicText(value) {
   return String(value || '')
-    .replace(/\bstjerne(r)?\b/gi, 'gæst$1')
+    .replace(/\bstjerner\b/gi, 'gæster')
+    .replace(/\bstjerne\b/gi, 'gæst')
     .replace(/\s{2,}/g, ' ')
     .trim();
 }
 
-const STAR_BY_ID = {
-  V052: 'Stjørna 1',
-  V126: 'Stjørna 2',
-  V174: 'Stjørna 3',
-  V228: 'Stjørna 4',
-  V290: 'Stjørna 5'
-};
+function legacyStarName(name) {
+  const n = String(name || '').trim();
+  const m = n.match(/^Stjerne\s+([A-E])$/i);
+  if (!m) return '';
+  return `Stjørna ${m[1].toUpperCase().charCodeAt(0) - 64}`;
+}
 
-function safePerson(name, role, id = '') {
-  const forcedStar = STAR_BY_ID[String(id || '').trim()];
-  if (forcedStar) return forcedStar;
+function safePerson(name, role) {
   const n = String(name || '').trim();
   const r = String(role || '').trim();
-  if (!n || /^stjerne\b/i.test(n) || /stjerne/i.test(r)) return '';
+  if (!n) return '';
+
+  const currentStar = n.match(/^Stjørna\s+(\d+)$/i);
+  if (currentStar) return `Stjørna ${Number(currentStar[1])}`;
+
+  const legacyStar = legacyStarName(n);
+  if (legacyStar) return legacyStar;
+
+  if (/^stjerne\b/i.test(n) || /\bstjerne\b/i.test(r)) return '';
+  if (/^mangler person/i.test(n)) return n;
+
   if (r.toLocaleLowerCase('fo-FO') === 'spíri') {
-    if (n.toLocaleLowerCase('fo-FO') === 'naina jórun') return 'Naina Jórun';
+    if (/^Naina\s+Jórun(?:\s|$)/i.test(n)) return 'Naina Jórun';
     return n.split(/\s+/)[0] || n;
   }
   return n;
+}
+
+function isCancelled(status) {
+  return /^(aflyst|annulleret|cancelled|canceled)$/i.test(String(status || '').trim());
 }
 
 function faroeNow() {
@@ -91,7 +115,7 @@ function faroeNow() {
   return {today:`${p.year}-${p.month}-${p.day}`, now:`${p.hour}:${p.minute}`};
 }
 
-async function fetchCsv(sheetId, sheet, range, timeoutMs = 6500) {
+async function fetchCsv(sheetId, sheet, range, timeoutMs = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -99,7 +123,7 @@ async function fetchCsv(sheetId, sheet, range, timeoutMs = 6500) {
     const response = await fetch(url, {
       cache:'no-store',
       signal: controller.signal,
-      headers:{'user-agent':'HOYDALAR-2-portal-safe','cache-control':'no-cache'}
+      headers:{'user-agent':'HOYDALAR-2-portal-live','cache-control':'no-cache'}
     });
     if (!response.ok) throw new Error(`${sheet} svarede ${response.status}`);
     return parseCsv(await response.text());
@@ -113,66 +137,83 @@ exports.handler = async function() {
     const sheetId = process.env.MASTER_SHEET_ID;
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler i Netlify.');
 
-    const starRanges = ['A88:J88','A162:J162','A210:J210','A264:J264','A326:J326'];
-    const [shiftRows, programRows, starBlocks] = await Promise.all([
-      fetchCsv(sheetId, 'VAGTPLAN', 'A5:J1040'),
-      fetchCsv(sheetId, 'DAGSPROGRAM', 'A5:L200').catch(() => []),
-      Promise.all(starRanges.map(range => fetchCsv(sheetId, 'VAGTPLAN', range).catch(() => [])))
+    // Open-ended A1 ranges mean new rows are included automatically.
+    const [shiftRows, programRows] = await Promise.all([
+      fetchCsv(sheetId, 'VAGTPLAN', 'A5:J'),
+      fetchCsv(sheetId, 'DAGSPROGRAM', 'A5:L').catch(() => [])
     ]);
-    const starRows = starBlocks.flat();
 
     const {today, now} = faroeNow();
-    const active = x => x && x.date && (x.date > today || (x.date === today && (!x.end || String(x.end) > now)));
+    const isValidDate = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
+    const active = x => x && isValidDate(x.date) && (x.date > today || (x.date === today && (!x.end || String(x.end) > now)));
 
     const byId = new Map();
-    for (const r of [...shiftRows, ...starRows]) {
+    for (const r of shiftRows) {
       const id = String(r[0] || '').trim();
       if (!id || id === 'Vagt ID') continue;
       byId.set(id, r);
     }
 
     const shifts = [...byId.values()].map(r => {
-      const id = String(r[0] || '').trim();
       const role = publicText(r[5]);
+      const status = publicText(r[9]) || 'Planlagt';
       return {
-        id,
+        id:String(r[0] || '').trim(),
         date:normalizeDate(r[1]),
         start:normalizeTime(r[2]),
         end:normalizeTime(r[3]),
-        person:safePerson(r[4], role, id),
+        person:safePerson(r[4], r[5]),
         role,
         task:publicText(r[6]),
         location:publicText(r[7]),
         activity:publicText(r[8]),
-        status:publicText(r[9]) || 'Planlagt'
+        status
       };
-    }).filter(x => x.id && x.person && active(x))
+    }).filter(x => x.id && x.person && active(x) && !isCancelled(x.status))
       .sort((a,b) => a.date.localeCompare(b.date) || (a.start||'').localeCompare(b.start||'') || a.person.localeCompare(b.person,'da'));
 
     let pRows = programRows;
     if (pRows[0] && String(pRows[0][0] || '').trim() === 'Dato') pRows = pRows.slice(1);
-    const program = pRows.map((r,i) => ({
-      id:`P${i+1}`,
-      date:normalizeDate(r[0]),
-      dayType:publicText(r[1]),
-      part:publicText(r[2]),
-      start:normalizeTime(r[3]),
-      end:normalizeTime(r[4]),
-      activity:publicText(r[5]),
-      participants:publicText(r[6]),
-      responsible:publicText(r[7]),
-      location:publicText(r[8]),
-      status:publicText(r[9]),
-      notes:publicText(r[10])
-    })).filter(x => x.date && (x.activity || x.start || x.end) && active(x))
+
+    const program = pRows.map((r,i) => {
+      const status = publicText(r[9]);
+      return {
+        id:`P${i+1}`,
+        date:normalizeDate(r[0]),
+        dayType:publicText(r[1]),
+        part:publicText(r[2]),
+        start:normalizeTime(r[3]),
+        end:normalizeTime(r[4]),
+        activity:publicText(r[5]),
+        participants:publicText(r[6]),
+        responsible:publicText(r[7]),
+        location:publicText(r[8]),
+        status,
+        notes:publicText(r[10])
+      };
+    }).filter(x => (x.activity || x.start || x.end) && active(x) && !isCancelled(x.status))
       .sort((a,b) => a.date.localeCompare(b.date) || (a.start||'').localeCompare(b.start||''));
 
-    const people = [...new Set(shifts.map(x => x.person).filter(Boolean))].sort((a,b) => a.localeCompare(b,'da'));
+    const people = [...new Set(shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))]
+      .sort((a,b) => a.localeCompare(b,'da'));
 
     return {
       statusCode:200,
-      headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0'},
-      body:JSON.stringify({updatedAt:new Date().toISOString(),today,people,shifts,program,rescueMode:true,starsGuaranteed:true})
+      headers:{
+        'content-type':'application/json; charset=utf-8',
+        'cache-control':'no-store, max-age=0, must-revalidate',
+        'pragma':'no-cache',
+        'expires':'0'
+      },
+      body:JSON.stringify({
+        updatedAt:new Date().toISOString(),
+        today,
+        people,
+        shifts,
+        program,
+        liveMaster:true,
+        source:'Hoydalar 2 Masterplan arbejdsfil'
+      })
     };
   } catch (error) {
     return {
