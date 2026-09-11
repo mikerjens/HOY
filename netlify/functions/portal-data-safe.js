@@ -132,15 +132,20 @@ async function fetchCsv(sheetId, sheet, range, timeoutMs = 8000) {
   }
 }
 
+async function fetchVagtplanChunks(sheetId) {
+  const ranges = ['A5:J404','A405:J804','A805:J1122'];
+  const blocks = await Promise.all(ranges.map(range => fetchCsv(sheetId, 'VAGTPLAN', range)));
+  return blocks.flat();
+}
+
 exports.handler = async function() {
   try {
     const sheetId = process.env.MASTER_SHEET_ID;
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler i Netlify.');
 
-    // Open-ended A1 ranges mean new rows are included automatically.
     const [shiftRows, programRows] = await Promise.all([
-      fetchCsv(sheetId, 'VAGTPLAN', 'A5:J'),
-      fetchCsv(sheetId, 'DAGSPROGRAM', 'A5:L').catch(() => [])
+      fetchVagtplanChunks(sheetId),
+      fetchCsv(sheetId, 'DAGSPROGRAM', 'A5:L200').catch(() => [])
     ]);
 
     const {today, now} = faroeNow();
@@ -212,6 +217,7 @@ exports.handler = async function() {
         shifts,
         program,
         liveMaster:true,
+        chunkedVagtplan:true,
         source:'Hoydalar 2 Masterplan arbejdsfil'
       })
     };
