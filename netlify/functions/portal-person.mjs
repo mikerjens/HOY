@@ -108,10 +108,10 @@ function faroeNow() {
 
 async function fetchRange(sheetId, range) {
   const params = `tqx=out:csv&sheet=VAGTPLAN&range=${encodeURIComponent(range)}&headers=0`;
-  const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?${params}&_=${Date.now()}`;
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?${params}&_=${Date.now()}-${Math.random()}`;
   const response = await fetch(sheetUrl, {
     cache:'no-store',
-    headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-person-chunk'}
+    headers:{'cache-control':'no-cache, no-store, max-age=0','pragma':'no-cache','user-agent':'HOYDALAR-2-person-chunk'}
   });
   if (!response.ok) throw new Error(`VAGTPLAN ${range} svarede ${response.status}`);
   return parseCsv(await response.text());
@@ -126,11 +126,13 @@ export default async (req) => {
     const sheetId = Netlify.env.get('MASTER_SHEET_ID');
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler');
 
-    // Read VAGTPLAN in bounded chunks, then filter locally by normalized person name.
-    // This avoids Google GViz query/range truncation that previously hid late-added rows.
+    // Read VAGTPLAN in bounded chunks and then re-read the active week in a small
+    // overlay range. The small overlay is intentionally last so newly inserted
+    // rows around 14–16 September win over any stale Google GViz chunk response.
     const ranges = ['A5:J404','A405:J804','A805:J1122'];
     const blocks = await Promise.all(ranges.map(range => fetchRange(sheetId, range)));
-    const rows = blocks.flat();
+    const activeWeekOverlay = await fetchRange(sheetId, 'A45:J75').catch(() => []);
+    const rows = [...blocks.flat(), ...activeWeekOverlay];
 
     const {today, now} = faroeNow();
     const byId = new Map();
@@ -153,10 +155,14 @@ export default async (req) => {
       name:requestedName,
       shifts,
       count:shifts.length,
-      source:'VAGTPLAN chunked person sync',
+      source:'VAGTPLAN chunked person sync + active-week overlay',
       updatedAt:new Date().toISOString()
     }, {
-      headers:{'cache-control':'no-store, max-age=0, must-revalidate','pragma':'no-cache'}
+      headers:{
+        'cache-control':'no-store, max-age=0, must-revalidate',
+        'pragma':'no-cache',
+        'expires':'0'
+      }
     });
   } catch (error) {
     return Response.json({error:error.message || 'Ukendt fejl'}, {
