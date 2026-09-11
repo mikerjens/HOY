@@ -25,8 +25,21 @@ function parseCsv(text) {
 function normalizeDate(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
+  if (/^\d{5}(?:\.\d+)?$/.test(raw)) {
+    const serial = Number(raw);
+    if (Number.isFinite(serial)) {
+      const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(serial) * 86400000);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+    }
+  }
   let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${String(Number(m[1])).padStart(2,'0')}-${String(Number(m[2])).padStart(2,'0')}`;
+  if (m) {
+    const a = Number(m[1]), b = Number(m[2]);
+    let month = a, day = b;
+    if (a > 12) { day = a; month = b; }
+    else if (b > 12) { month = a; day = b; }
+    return `${m[3]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
   m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) return `${m[3]}-${String(Number(m[2])).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
   return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : '';
@@ -93,10 +106,14 @@ function faroeNow() {
   return {today:`${p.year}-${p.month}-${p.day}`, now:`${p.hour}:${p.minute}`};
 }
 
-async function fetchCsv(sheetId, params, userAgent) {
+async function fetchRange(sheetId, range) {
+  const params = `tqx=out:csv&sheet=VAGTPLAN&range=${encodeURIComponent(range)}&headers=0`;
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?${params}&_=${Date.now()}`;
-  const response = await fetch(sheetUrl, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':userAgent}});
-  if (!response.ok) throw new Error(`VAGTPLAN svarede ${response.status}`);
+  const response = await fetch(sheetUrl, {
+    cache:'no-store',
+    headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-person-chunk'}
+  });
+  if (!response.ok) throw new Error(`VAGTPLAN ${range} svarede ${response.status}`);
   return parseCsv(await response.text());
 }
 
@@ -109,38 +126,42 @@ export default async (req) => {
     const sheetId = Netlify.env.get('MASTER_SHEET_ID');
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler');
 
-    const escapedName = requestedName.replace(/'/g, "''");
-    const tq = `select A,B,C,D,E,F,G,H,I,J where E = '${escapedName}'`;
-    const queryParams = `tqx=out:csv&sheet=VAGTPLAN&headers=0&tq=${encodeURIComponent(tq)}`;
-    const rows = await fetchCsv(sheetId, queryParams, 'HOYDALAR-2-person-live');
-
-    // Absolute fallback for Elin's Monday setup task. The row exists in Masterplan
-    // at 539 and must always be visible in her personal schedule.
-    if (requestedName === 'Elin Dagbjartsdóttir Neshamar') {
-      try {
-        const fallbackRows = await fetchCsv(sheetId, 'tqx=out:csv&sheet=VAGTPLAN&range=A539:J539&headers=0', 'HOYDALAR-2-elin-fallback');
-        for (const r of fallbackRows) {
-          if (String(r[4] || '').trim() === requestedName) rows.push(r);
-        }
-      } catch (_) {}
-    }
+    // Read VAGTPLAN in bounded chunks, then filter locally by normalized person name.
+    // This avoids Google GViz query/range truncation that previously hid late-added rows.
+    const ranges = ['A5:J404','A405:J804','A805:J1122'];
+    const blocks = await Promise.all(ranges.map(range => fetchRange(sheetId, range)));
+    const rows = blocks.flat();
 
     const {today, now} = faroeNow();
     const byId = new Map();
     for (const r of rows) {
       const shift = rowToShift(r);
-      if (!shift.id || !shift.date || !shift.person) continue;
+      if (!shift.id || shift.id === 'Vagt ID' || !shift.date || !shift.person) continue;
+      if (shift.person !== requestedName) continue;
       if (/^(aflyst|annulleret|cancelled|canceled)$/i.test(shift.status)) continue;
       if (!(shift.date > today || (shift.date === today && (!shift.end || shift.end > now)))) continue;
       byId.set(shift.id, shift);
     }
 
-    const shifts = [...byId.values()].sort((a,b) => a.date.localeCompare(b.date) || (a.start || '').localeCompare(b.start || ''));
+    const shifts = [...byId.values()].sort((a,b) =>
+      a.date.localeCompare(b.date) ||
+      (a.start || '').localeCompare(b.start || '') ||
+      (a.end || '').localeCompare(b.end || '')
+    );
 
-    return Response.json({name:requestedName, shifts, updatedAt:new Date().toISOString()}, {
-      headers:{'cache-control':'no-store, max-age=0, must-revalidate'}
+    return Response.json({
+      name:requestedName,
+      shifts,
+      count:shifts.length,
+      source:'VAGTPLAN chunked person sync',
+      updatedAt:new Date().toISOString()
+    }, {
+      headers:{'cache-control':'no-store, max-age=0, must-revalidate','pragma':'no-cache'}
     });
   } catch (error) {
-    return Response.json({error:error.message || 'Ukendt fejl'}, {status:500, headers:{'cache-control':'no-store'}});
+    return Response.json({error:error.message || 'Ukendt fejl'}, {
+      status:500,
+      headers:{'cache-control':'no-store','pragma':'no-cache'}
+    });
   }
 };
