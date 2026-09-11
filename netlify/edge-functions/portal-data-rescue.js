@@ -92,6 +92,13 @@ function faroeNow() {
   return {today:`${parts.year}-${parts.month}-${parts.day}`, now:`${parts.hour}:${parts.minute}`};
 }
 
+async function fetchRange(sheetId, range) {
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&range=${encodeURIComponent(range)}&headers=0&_=${Date.now()}`;
+  const response = await fetch(url, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-live-merge'}});
+  if (!response.ok) throw new Error(`VAGTPLAN ${range} svarede ${response.status}`);
+  return parseCsv(await response.text());
+}
+
 export default async (request, context) => {
   const target = new URL('/.netlify/functions/portal-data-safe', request.url);
   const response = await fetch(target, {headers:{'cache-control':'no-cache'}});
@@ -102,16 +109,17 @@ export default async (request, context) => {
     const sheetId = Netlify.env.get('MASTER_SHEET_ID');
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler');
 
-    // Fetch the complete VAGTPLAN again here and merge by Vagt ID. This makes
-    // newly added personal rows visible even if the base function misses them.
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&range=A5:J1122&headers=0&_=${Date.now()}`;
-    const liveResponse = await fetch(sheetUrl, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-live-merge'}});
-    if (!liveResponse.ok) throw new Error(`VAGTPLAN svarede ${liveResponse.status}`);
+    const blocks = await Promise.all([
+      fetchRange(sheetId, 'A5:J404'),
+      fetchRange(sheetId, 'A405:J804'),
+      fetchRange(sheetId, 'A805:J1122')
+    ]);
+    const rows = blocks.flat();
 
     const {today, now} = faroeNow();
     const active = x => x.date && (x.date > today || (x.date === today && (!x.end || x.end > now)));
 
-    const liveShifts = parseCsv(await liveResponse.text()).map(r => {
+    const liveShifts = rows.map(r => {
       const status = publicText(r[9]) || 'Planlagt';
       return {
         id:String(r[0] || '').trim(),
@@ -137,6 +145,7 @@ export default async (request, context) => {
     );
     data.people = [...new Set(data.shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))].sort((a,b)=>a.localeCompare(b,'da'));
     data.fullVagtplanMerge = true;
+    data.chunkedVagtplanMerge = true;
 
     const headers = new Headers(response.headers);
     headers.set('content-type','application/json; charset=utf-8');
