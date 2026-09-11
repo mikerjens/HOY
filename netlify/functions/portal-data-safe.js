@@ -119,11 +119,16 @@ async function fetchCsv(sheetId, sheet, range, timeoutMs = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&headers=0&_=${Date.now()}`;
+    const bust = `${Date.now()}-${Math.random()}`;
+    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&headers=0&_=${bust}`;
     const response = await fetch(url, {
       cache:'no-store',
       signal: controller.signal,
-      headers:{'user-agent':'HOYDALAR-2-portal-live','cache-control':'no-cache'}
+      headers:{
+        'user-agent':'HOYDALAR-2-portal-live',
+        'cache-control':'no-cache, no-store, max-age=0',
+        'pragma':'no-cache'
+      }
     });
     if (!response.ok) throw new Error(`${sheet} svarede ${response.status}`);
     return parseCsv(await response.text());
@@ -135,7 +140,12 @@ async function fetchCsv(sheetId, sheet, range, timeoutMs = 8000) {
 async function fetchVagtplanChunks(sheetId) {
   const ranges = ['A5:J404','A405:J804','A805:J1122'];
   const blocks = await Promise.all(ranges.map(range => fetchCsv(sheetId, 'VAGTPLAN', range)));
-  return blocks.flat();
+
+  // Read the active production week again in a small range. This is deliberately
+  // appended last so newly inserted/edited rows around 14–16 September override
+  // any stale values Google might return for a large range.
+  const activeWeek = await fetchCsv(sheetId, 'VAGTPLAN', 'A45:J75').catch(() => []);
+  return [...blocks.flat(), ...activeWeek];
 }
 
 exports.handler = async function() {
@@ -218,6 +228,7 @@ exports.handler = async function() {
         program,
         liveMaster:true,
         chunkedVagtplan:true,
+        activeWeekOverlay:true,
         source:'Hoydalar 2 Masterplan arbejdsfil'
       })
     };
