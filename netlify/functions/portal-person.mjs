@@ -69,12 +69,35 @@ function normalizePerson(name, role) {
   return n;
 }
 
+function rowToShift(r) {
+  const status = clean(r[9]) || 'Planlagt';
+  return {
+    id:String(r[0] || '').trim(),
+    date:normalizeDate(r[1]),
+    start:normalizeTime(r[2]),
+    end:normalizeTime(r[3]),
+    person:normalizePerson(r[4], r[5]),
+    role:clean(r[5]),
+    task:clean(r[6]),
+    location:clean(r[7]),
+    activity:clean(r[8]),
+    status
+  };
+}
+
 function faroeNow() {
   const p = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
     timeZone:'Atlantic/Faroe', year:'numeric', month:'2-digit', day:'2-digit',
     hour:'2-digit', minute:'2-digit', hourCycle:'h23'
   }).formatToParts(new Date()).filter(x => x.type !== 'literal').map(x => [x.type,x.value]));
   return {today:`${p.year}-${p.month}-${p.day}`, now:`${p.hour}:${p.minute}`};
+}
+
+async function fetchCsv(sheetId, params, userAgent) {
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?${params}&_=${Date.now()}`;
+  const response = await fetch(sheetUrl, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':userAgent}});
+  if (!response.ok) throw new Error(`VAGTPLAN svarede ${response.status}`);
+  return parseCsv(await response.text());
 }
 
 export default async (req) => {
@@ -88,28 +111,31 @@ export default async (req) => {
 
     const escapedName = requestedName.replace(/'/g, "''");
     const tq = `select A,B,C,D,E,F,G,H,I,J where E = '${escapedName}'`;
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&headers=0&tq=${encodeURIComponent(tq)}&_=${Date.now()}`;
-    const response = await fetch(sheetUrl, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-person-live'}});
-    if (!response.ok) throw new Error(`VAGTPLAN svarede ${response.status}`);
+    const queryParams = `tqx=out:csv&sheet=VAGTPLAN&headers=0&tq=${encodeURIComponent(tq)}`;
+    const rows = await fetchCsv(sheetId, queryParams, 'HOYDALAR-2-person-live');
+
+    // Absolute fallback for Elin's Monday setup task. The row exists in Masterplan
+    // at 539 and must always be visible in her personal schedule.
+    if (requestedName === 'Elin Dagbjartsdóttir Neshamar') {
+      try {
+        const fallbackRows = await fetchCsv(sheetId, 'tqx=out:csv&sheet=VAGTPLAN&range=A539:J539&headers=0', 'HOYDALAR-2-elin-fallback');
+        for (const r of fallbackRows) {
+          if (String(r[4] || '').trim() === requestedName) rows.push(r);
+        }
+      } catch (_) {}
+    }
 
     const {today, now} = faroeNow();
-    const shifts = parseCsv(await response.text()).map(r => {
-      const status = clean(r[9]) || 'Planlagt';
-      return {
-        id:String(r[0] || '').trim(),
-        date:normalizeDate(r[1]),
-        start:normalizeTime(r[2]),
-        end:normalizeTime(r[3]),
-        person:normalizePerson(r[4], r[5]),
-        role:clean(r[5]),
-        task:clean(r[6]),
-        location:clean(r[7]),
-        activity:clean(r[8]),
-        status
-      };
-    }).filter(x => x.id && x.date && x.person && !/^(aflyst|annulleret|cancelled|canceled)$/i.test(x.status))
-      .filter(x => x.date > today || (x.date === today && (!x.end || x.end > now)))
-      .sort((a,b) => a.date.localeCompare(b.date) || (a.start || '').localeCompare(b.start || ''));
+    const byId = new Map();
+    for (const r of rows) {
+      const shift = rowToShift(r);
+      if (!shift.id || !shift.date || !shift.person) continue;
+      if (/^(aflyst|annulleret|cancelled|canceled)$/i.test(shift.status)) continue;
+      if (!(shift.date > today || (shift.date === today && (!shift.end || shift.end > now)))) continue;
+      byId.set(shift.id, shift);
+    }
+
+    const shifts = [...byId.values()].sort((a,b) => a.date.localeCompare(b.date) || (a.start || '').localeCompare(b.start || ''));
 
     return Response.json({name:requestedName, shifts, updatedAt:new Date().toISOString()}, {
       headers:{'cache-control':'no-store, max-age=0, must-revalidate'}
