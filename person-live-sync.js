@@ -1,7 +1,7 @@
 (() => {
-  let lastKey = '';
   let running = false;
   let retryTimer = null;
+  let observerTimer = null;
 
   function getState() {
     let data;
@@ -12,18 +12,22 @@
     return {data, name};
   }
 
-  function scheduleRetry() {
+  function signature(list) {
+    return (list || [])
+      .map(x => [x.id,x.date,x.start,x.end,x.person,x.activity,x.task].map(v => String(v || '')).join('|'))
+      .sort()
+      .join('||');
+  }
+
+  function scheduleRetry(ms = 1800) {
     clearTimeout(retryTimer);
-    retryTimer = setTimeout(() => syncSelectedPerson(true), 2500);
+    retryTimer = setTimeout(() => syncSelectedPerson(true), ms);
   }
 
   async function syncSelectedPerson(force = false) {
     if (running) return;
     const state = getState();
     if (!state) return;
-
-    const key = `${state.name}|${String(state.data.updatedAt || '')}`;
-    if (!force && key === lastKey) return;
     running = true;
 
     try {
@@ -35,27 +39,40 @@
       if (!r.ok) throw new Error(j.error || 'Kunne ikke hente personens vagter');
       if (!Array.isArray(j.shifts)) throw new Error('Ugyldigt svar fra person-synk');
 
-      // If the user changed name while the request was running, ignore this result.
       const currentName = String(document.getElementById('nameSelect')?.value || '').trim();
       if (currentName !== state.name) return;
 
-      // The selected person's schedule is replaced, not merged. VAGTPLAN is source of truth.
-      const others = state.data.shifts.filter(x => String(x.person || '').trim() !== state.name);
-      state.data.shifts = [...others, ...j.shifts].sort((a,b) =>
+      const currentPersonal = state.data.shifts
+        .filter(x => String(x.person || '').trim() === state.name)
+        .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')));
+
+      const freshPersonal = [...j.shifts].sort((a,b) =>
         String(a.date || '').localeCompare(String(b.date || '')) ||
         String(a.start || '').localeCompare(String(b.start || '')) ||
-        String(a.person || '').localeCompare(String(b.person || ''), 'da')
+        String(a.end || '').localeCompare(String(b.end || ''))
       );
 
-      if (!state.data.people.includes(state.name)) {
-        state.data.people.push(state.name);
-        state.data.people.sort((a,b) => a.localeCompare(b,'da'));
+      const changed = signature(currentPersonal) !== signature(freshPersonal);
+      if (!changed && !force) return;
+
+      if (changed) {
+        const others = state.data.shifts.filter(x => String(x.person || '').trim() !== state.name);
+        state.data.shifts = [...others, ...freshPersonal].sort((a,b) =>
+          String(a.date || '').localeCompare(String(b.date || '')) ||
+          String(a.start || '').localeCompare(String(b.start || '')) ||
+          String(a.person || '').localeCompare(String(b.person || ''), 'da')
+        );
+
+        if (!state.data.people.includes(state.name)) {
+          state.data.people.push(state.name);
+          state.data.people.sort((a,b) => a.localeCompare(b,'da'));
+        }
+
+        if (typeof renderHome === 'function') renderHome();
+        if (typeof renderMine === 'function') renderMine();
       }
 
-      lastKey = key;
       clearTimeout(retryTimer);
-      if (typeof renderHome === 'function') renderHome();
-      if (typeof renderMine === 'function') renderMine();
     } catch (e) {
       console.warn('Person live sync failed', e);
       scheduleRetry();
@@ -64,14 +81,25 @@
     }
   }
 
+  function queueSelfHeal() {
+    clearTimeout(observerTimer);
+    observerTimer = setTimeout(() => syncSelectedPerson(false), 80);
+  }
+
   document.addEventListener('change', e => {
-    if (e.target?.id === 'nameSelect') {
-      lastKey = '';
-      setTimeout(() => syncSelectedPerson(true), 0);
-    }
+    if (e.target?.id === 'nameSelect') setTimeout(() => syncSelectedPerson(true), 0);
   });
 
-  // Refresh the selected person's own schedule frequently, independently of the global portal refresh.
-  setInterval(() => syncSelectedPerson(true), 30000);
-  setTimeout(() => syncSelectedPerson(true), 350);
+  window.addEventListener('pageshow', () => setTimeout(() => syncSelectedPerson(true), 100));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) setTimeout(() => syncSelectedPerson(true), 100);
+  });
+
+  const observer = new MutationObserver(queueSelfHeal);
+  observer.observe(document.documentElement, {subtree:true, childList:true});
+
+  // Fast initial correction, then periodic safety check.
+  setTimeout(() => syncSelectedPerson(true), 250);
+  setTimeout(() => syncSelectedPerson(true), 1200);
+  setInterval(() => syncSelectedPerson(false), 10000);
 })();
