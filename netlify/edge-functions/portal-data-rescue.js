@@ -26,10 +26,17 @@ function normalizeDate(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
   let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${String(Number(m[1])).padStart(2,'0')}-${String(Number(m[2])).padStart(2,'0')}`;
+  if (m) {
+    const a = Number(m[1]), b = Number(m[2]);
+    let month = a, day = b;
+    if (a > 12) { day = a; month = b; }
+    else if (b > 12) { month = a; day = b; }
+    return `${m[3]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
   m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) return `${m[3]}-${String(Number(m[2])).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`;
-  return raw;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  return '';
 }
 
 function normalizeTime(value) {
@@ -43,19 +50,49 @@ function normalizeTime(value) {
     return `${String(h).padStart(2,'0')}:${m[2]}`;
   }
   m = raw.match(/^(\d{1,2}):(\d{2})/);
-  return m ? `${String(Number(m[1])).padStart(2,'0')}:${m[2]}` : raw;
+  return m ? `${String(Number(m[1])).padStart(2,'0')}:${m[2]}` : '';
 }
 
-function starName(value) {
-  const n = String(value || '').trim();
+function publicText(value) {
+  return String(value || '')
+    .replace(/\bstjerner\b/gi, 'gæster')
+    .replace(/\bstjerne\b/gi, 'gæst')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function safePerson(name, role) {
+  const n = String(name || '').trim();
+  const r = String(role || '').trim();
+  if (!n) return '';
+
   let m = n.match(/^Stjørna\s+([1-5])$/i);
   if (m) return `Stjørna ${m[1]}`;
   m = n.match(/^Stjerne\s+([A-E])$/i);
   if (m) return `Stjørna ${m[1].toUpperCase().charCodeAt(0) - 64}`;
-  return '';
+
+  if (/^stjerne\b/i.test(n) || /\bstjerne\b/i.test(r)) return '';
+  if (/^mangler person/i.test(n)) return n;
+  if (r.toLocaleLowerCase('fo-FO') === 'spíri') {
+    if (/^Naina\s+Jórun(?:\s|$)/i.test(n)) return 'Naina Jórun';
+    return n.split(/\s+/)[0] || n;
+  }
+  return n;
 }
 
-export default async (request) => {
+function isCancelled(status) {
+  return /^(aflyst|annulleret|cancelled|canceled)$/i.test(String(status || '').trim());
+}
+
+function faroeNow() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
+    timeZone:'Atlantic/Faroe', year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hourCycle:'h23'
+  }).formatToParts(new Date()).filter(x => x.type !== 'literal').map(x => [x.type,x.value]));
+  return {today:`${parts.year}-${parts.month}-${parts.day}`, now:`${parts.hour}:${parts.minute}`};
+}
+
+export default async (request, context) => {
   const target = new URL('/.netlify/functions/portal-data-safe', request.url);
   const response = await fetch(target, {headers:{'cache-control':'no-cache'}});
   if (!response.ok) return response;
@@ -65,43 +102,54 @@ export default async (request) => {
     const sheetId = Netlify.env.get('MASTER_SHEET_ID');
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler');
 
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&range=A80:J340&headers=0&_=${Date.now()}`;
-    const starResponse = await fetch(sheetUrl, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-stars'}});
-    if (!starResponse.ok) throw new Error(`VAGTPLAN svarede ${starResponse.status}`);
+    // Fetch the complete VAGTPLAN again here and merge by Vagt ID. This makes
+    // newly added personal rows visible even if the base function misses them.
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&range=A5:J1122&headers=0&_=${Date.now()}`;
+    const liveResponse = await fetch(sheetUrl, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-live-merge'}});
+    if (!liveResponse.ok) throw new Error(`VAGTPLAN svarede ${liveResponse.status}`);
 
-    const rows = parseCsv(await starResponse.text());
-    const stars = rows.map(r => {
-      const person = starName(r[4]);
-      if (!person) return null;
+    const {today, now} = faroeNow();
+    const active = x => x.date && (x.date > today || (x.date === today && (!x.end || x.end > now)));
+
+    const liveShifts = parseCsv(await liveResponse.text()).map(r => {
+      const status = publicText(r[9]) || 'Planlagt';
       return {
         id:String(r[0] || '').trim(),
         date:normalizeDate(r[1]),
         start:normalizeTime(r[2]),
         end:normalizeTime(r[3]),
-        person,
-        role:'Stjørna',
-        task:String(r[6] || '').trim(),
-        location:String(r[7] || '').trim(),
-        activity:String(r[8] || '').trim(),
-        status:String(r[9] || '').trim() || 'Planlagt'
+        person:safePerson(r[4], r[5]),
+        role:publicText(r[5]),
+        task:publicText(r[6]),
+        location:publicText(r[7]),
+        activity:publicText(r[8]),
+        status
       };
-    }).filter(x => x && x.id && x.date);
+    }).filter(x => x.id && x.id !== 'Vagt ID' && x.person && active(x) && !isCancelled(x.status));
 
     const byId = new Map((Array.isArray(data.shifts) ? data.shifts : []).map(x => [x.id, x]));
-    for (const s of stars) byId.set(s.id, {...(byId.get(s.id) || {}), ...s});
-    data.shifts = [...byId.values()].sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.start||'').localeCompare(String(b.start||'')) || String(a.person||'').localeCompare(String(b.person||''),'da'));
-    data.people = [...new Set(data.shifts.map(x => x.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'da'));
-    data.starSync = true;
+    for (const shift of liveShifts) byId.set(shift.id, {...(byId.get(shift.id) || {}), ...shift});
+
+    data.shifts = [...byId.values()].sort((a,b) =>
+      String(a.date||'').localeCompare(String(b.date||'')) ||
+      String(a.start||'').localeCompare(String(b.start||'')) ||
+      String(a.person||'').localeCompare(String(b.person||''),'da')
+    );
+    data.people = [...new Set(data.shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))].sort((a,b)=>a.localeCompare(b,'da'));
+    data.fullVagtplanMerge = true;
 
     const headers = new Headers(response.headers);
     headers.set('content-type','application/json; charset=utf-8');
-    headers.set('cache-control','no-store, max-age=0');
+    headers.set('cache-control','no-store, max-age=0, must-revalidate');
+    headers.set('pragma','no-cache');
+    headers.set('expires','0');
     headers.delete('content-length');
     return new Response(JSON.stringify(data), {status:200, headers});
   } catch (error) {
     const headers = new Headers(response.headers);
     headers.set('cache-control','no-store, max-age=0');
-    return new Response(response.body, {status:response.status, headers});
+    headers.delete('content-length');
+    return new Response(await response.text(), {status:response.status, headers});
   }
 };
 
