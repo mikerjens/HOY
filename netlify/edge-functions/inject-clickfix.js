@@ -9,8 +9,9 @@ export default async (request, context) => {
   html = html.replace(/<script src="\/credit-message-button\.js\?v=[^"]+"><\/script>/g, '');
   html = html.replace(/<script src="\/credit-route-fix\.js\?v=[^"]+"><\/script>/g, '');
   html = html.replace(/<script src="\/mine-task-detail\.js\?v=[^"]+"><\/script>/g, '');
+  html = html.replace(/<script src="\/vagtplan-late-sync\.js\?v=[^"]+"><\/script>/g, '');
   html = html.replace('</head>', '<style>.mine-note{display:none!important}</style></head>');
-  html = html.replace('</body>', '<script src="/clickfix.js?v=20260909-stjorna5-fix"></script><script src="/home-next-fix.js?v=20260909-next-event-2"></script><script src="/credit-message-button.js?v=20260909-credit-button-fo-2"></script><script src="/credit-route-fix.js?v=20260909-credit-route-click"></script><script src="/mine-task-detail.js?v=20260911-task-detail"></script></body>');
+  html = html.replace('</body>', '<script src="/clickfix.js?v=20260909-stjorna5-fix"></script><script src="/home-next-fix.js?v=20260909-next-event-2"></script><script src="/credit-message-button.js?v=20260909-credit-button-fo-2"></script><script src="/credit-route-fix.js?v=20260909-credit-route-click"></script><script src="/vagtplan-late-sync.js?v=20260911-late-vagt-1"></script><script src="/mine-task-detail.js?v=20260911-task-detail-2"></script></body>');
 
   const headers = new Headers(response.headers);
   headers.delete('content-length');
