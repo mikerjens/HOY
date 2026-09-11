@@ -93,15 +93,22 @@ function faroeNow() {
 }
 
 async function fetchRange(sheetId, range) {
-  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&range=${encodeURIComponent(range)}&headers=0&_=${Date.now()}`;
-  const response = await fetch(url, {cache:'no-store', headers:{'cache-control':'no-cache','user-agent':'HOYDALAR-2-live-merge'}});
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=VAGTPLAN&range=${encodeURIComponent(range)}&headers=0&_=${Date.now()}-${Math.random()}`;
+  const response = await fetch(url, {
+    cache:'no-store',
+    headers:{
+      'cache-control':'no-cache, no-store, max-age=0',
+      'pragma':'no-cache',
+      'user-agent':'HOYDALAR-2-live-merge'
+    }
+  });
   if (!response.ok) throw new Error(`VAGTPLAN ${range} svarede ${response.status}`);
   return parseCsv(await response.text());
 }
 
 export default async (request, context) => {
   const target = new URL('/.netlify/functions/portal-data-safe', request.url);
-  const response = await fetch(target, {headers:{'cache-control':'no-cache'}});
+  const response = await fetch(target, {headers:{'cache-control':'no-cache, no-store','pragma':'no-cache'}});
   if (!response.ok) return response;
 
   try {
@@ -109,10 +116,13 @@ export default async (request, context) => {
     const sheetId = Netlify.env.get('MASTER_SHEET_ID');
     if (!sheetId) throw new Error('MASTER_SHEET_ID mangler');
 
+    // Large chunks give complete coverage. A small active-week overlay is fetched
+    // last so newly inserted rows around 14–16 September override stale GViz data.
     const blocks = await Promise.all([
       fetchRange(sheetId, 'A5:J404'),
       fetchRange(sheetId, 'A405:J804'),
-      fetchRange(sheetId, 'A805:J1122')
+      fetchRange(sheetId, 'A805:J1122'),
+      fetchRange(sheetId, 'A45:J75')
     ]);
     const rows = blocks.flat();
 
@@ -146,6 +156,7 @@ export default async (request, context) => {
     data.people = [...new Set(data.shifts.map(x => x.person).filter(x => x && !/^mangler person/i.test(x)))].sort((a,b)=>a.localeCompare(b,'da'));
     data.fullVagtplanMerge = true;
     data.chunkedVagtplanMerge = true;
+    data.activeWeekOverlay = true;
 
     const headers = new Headers(response.headers);
     headers.set('content-type','application/json; charset=utf-8');
